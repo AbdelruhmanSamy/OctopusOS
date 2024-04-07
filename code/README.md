@@ -7,9 +7,11 @@ getClk();
 ## You can use Makefile to build and run your project
 
 # To compile your project, use the command:
+
 make
 
 # To run your project, use the command:
+
 make run
 
 # If you added a file to your project add it to the build section in the Makefile
