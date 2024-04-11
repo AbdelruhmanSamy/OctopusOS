@@ -28,6 +28,7 @@
 #define ANSI_BLUE "\x1b[34m"
 #define ANSI_MAGENTA "\x1b[35m"
 #define ANSI_CYAN "\x1b[36m"
+#define ANSI_TEAL "\x1b[96m"
 #define ANSI_WHITE "\x1b[37m"
 #define ANSI_PURPLE "\x1b[35m"
 #define ANSI_RESET "\x1b[0m"

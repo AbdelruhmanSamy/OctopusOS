@@ -7,3 +7,5 @@ typedef struct process {
   int priority; // priority
   // TODO: add more attributes here when needed
 } process_t;
+
+enum scheduler_type { HPF, SRTN, RR };
