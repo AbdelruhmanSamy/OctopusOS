@@ -6,20 +6,23 @@
 // ====== FUNCTION DECLARATIONS ======
 
 queue *readInputFile();
+enum scheduler_type getSchedulerType();
+void getInput(enum scheduler_type *, int *);
 void clearResources(int);
 
 int main(int argc, char *argv[]) {
   queue *processes;
+  enum scheduler_type schedulerType;
+  int quantum;
 
   signal(SIGINT, clearResources);
-  // TODO Initialization
-  // 1. Read the input files.
-  processes = readInputFile();
 
+  processes = readInputFile();
   printf(ANSI_GREEN "number of processes: %ld\n" ANSI_RESET, size(processes));
 
   // 2. Ask the user for the chosen scheduling algorithm and its parameters, if
   // there are any.
+  getInput(&schedulerType, &quantum);
   // 3. Initiate and create the scheduler and clock processes.
   // 4. Use this function after creating the clock process to initialize clock
   initClk();
@@ -81,8 +84,85 @@ queue *readInputFile() {
   return processes;
 }
 
+/**
+ * getSchedulerType - Asks the user to choose the scheduling algorithm to start
+ * the simulation.
+ *
+ * return: the chosen scheduler type
+ */
+enum scheduler_type getSchedulerType() {
+  int choice;
+
+  printf(ANSI_TEAL "==========================================================="
+                   "=\n" ANSI_RESET);
+  printf(
+      ANSI_TEAL
+      "|| Choose the scheduling algorithm to start the simulation ||" ANSI_RESET
+      "\n");
+  printf(ANSI_TEAL "==========================================================="
+                   "=\n" ANSI_RESET);
+
+  printf(ANSI_GREEN
+         "1. Non-preemptive Highest Priority First (HPF)\n" ANSI_RESET);
+  printf(ANSI_GREEN "2. Shortest Remaining Time Next (SRTN)\n" ANSI_RESET);
+  printf(ANSI_GREEN "3. Round Robin (RR)\n" ANSI_RESET);
+  scanf("%d", &choice);
+
+  switch (choice) {
+  case 1:
+    return HPF;
+  case 2:
+    return SRTN;
+  case 3:
+    return RR;
+  default:
+    return -1;
+  }
+}
+
+/**
+ * getInput - Asks the user for the chosen scheduling algorithm and its
+ * parameters, if there are any.
+ *
+ * @schedulerType: a pointer to the chosen scheduler type
+ * @quantum: a pointer to the quantum value
+ */
+void getInput(enum scheduler_type *schedulerType, int *quantum) {
+  *schedulerType = getSchedulerType();
+
+  if (*schedulerType == -1) {
+    printf(ANSI_RED "Invalid choice, try again...\n" ANSI_RESET);
+    return getInput(schedulerType, quantum);
+  }
+
+  if (*schedulerType == RR) {
+    printf(ANSI_YELLOW "Enter the quantum value: " ANSI_RESET);
+    scanf("%d", quantum);
+
+    if (*quantum <= 0) {
+      printf(ANSI_RED "Invalid quantum value, try again...\n" ANSI_RESET);
+      return getInput(schedulerType, quantum);
+    }
+  }
+
+  printf(ANSI_GREEN "============================\n" ANSI_RESET);
+  printf(ANSI_GREEN "||       PARAMETERS       ||\n" ANSI_RESET);
+  printf(ANSI_GREEN "============================\n" ANSI_RESET);
+  printf(ANSI_GREEN "|| Scheduler type |  %d    ||\n" ANSI_RESET,
+         *schedulerType);
+  if (*schedulerType == RR) {
+    printf(ANSI_GREEN "|| Quantum:       |  %d    ||\n" ANSI_RESET, *quantum);
+  }
+  printf(ANSI_GREEN "============================\n" ANSI_RESET);
+}
+
+/**
+ * clearResources - Clears all resources in case of interruption.
+ *
+ * @signum: the signal number
+ */
 void clearResources(int signum) {
-  // TODO Clears all resources in case of interruption
+  // TODO: Clears all resources in case of interruption
   destroyClk(true);
   killpg(getpgrp(), SIGINT);
   exit(0);
