@@ -1,7 +1,5 @@
 #include "./headers.h"
-#include <stdio.h>
-
-// ======     COSNTANTS         ======
+#include "queue.h"
 
 // ====== FUNCTION DECLARATIONS ======
 
@@ -11,6 +9,7 @@ enum scheduler_type getSchedulerType();
 void getInput(enum scheduler_type *, int *);
 void clearResources(int);
 void createSchedulerAndClock(pid_t *, pid_t *);
+void sendProcessesToScheduler(queue *);
 
 int main(int argc, char *argv[]) {
   queue *processes;
@@ -27,19 +26,14 @@ int main(int argc, char *argv[]) {
 
   getInput(&schedulerType, &quantum);
 
-  // 3. Initiate and create the scheduler and clock processes.
   createSchedulerAndClock(&schedulerPid, &clockPid);
 
-  // 4. Use this function after creating the clock process to initialize clock
   initClk();
-  // To get time use this
-  int x = getClk();
-  printf("current time is %d\n", x);
-  // TODO Generation Main Loop
+
+  sendProcessesToScheduler(processes);
+
   // 5. Create a data structure for processes and provide it with its
   // parameters.
-  // 6. Send the information to the scheduler at the appropriate time.
-  // 7. Clear clock resources
   destroyClk(true);
 }
 
@@ -256,4 +250,37 @@ void clearResources(int signum) {
   destroyClk(true);
   killpg(getpgrp(), SIGINT);
   exit(0);
+}
+
+/**
+ * sendProcessesToScheduler - Sends the processes to the scheduler at the
+ * appropriate time.
+ *
+ * @processes: a pointer to the queue of processes
+ */
+void sendProcessesToScheduler(queue *processes) {
+  int currentTime = getClk();
+  int lastTime = currentTime;
+  process_t *process;
+
+  while (!empty(processes)) {
+    process = (process_t *)front(processes);
+    currentTime = getClk();
+    if (currentTime == lastTime) {
+      lastTime = currentTime;
+      continue;
+    }
+
+    printf(ANSI_YELLOW "=>Current time: %d\n" ANSI_RESET, currentTime);
+    if (currentTime < process->AT) {
+      lastTime = currentTime;
+      continue;
+    }
+
+    printf(ANSI_PURPLE "=>Sending process with id: %d, AT: %d, BT: %d, "
+                       "priority: %d to scheduler\n" ANSI_RESET,
+           process->id, process->AT, process->BT, process->priority);
+    pop(processes);
+    lastTime = currentTime;
+  }
 }
