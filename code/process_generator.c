@@ -10,22 +10,26 @@ void printBanner();
 enum scheduler_type getSchedulerType();
 void getInput(enum scheduler_type *, int *);
 void clearResources(int);
+void createSchedulerAndClock(pid_t *, pid_t *);
 
 int main(int argc, char *argv[]) {
   queue *processes;
   enum scheduler_type schedulerType;
   int quantum;
+  pid_t schedulerPid, clockPid;
 
   signal(SIGINT, clearResources);
 
   printBanner();
+
   processes = readInputFile();
   printf(ANSI_GREEN "number of processes: %ld\n" ANSI_RESET, size(processes));
 
-  // 2. Ask the user for the chosen scheduling algorithm and its parameters, if
-  // there are any.
   getInput(&schedulerType, &quantum);
+
   // 3. Initiate and create the scheduler and clock processes.
+  createSchedulerAndClock(&schedulerPid, &clockPid);
+
   // 4. Use this function after creating the clock process to initialize clock
   initClk();
   // To get time use this
@@ -158,6 +162,9 @@ void getInput(enum scheduler_type *schedulerType, int *quantum) {
   printf(ANSI_GREEN "============================\n" ANSI_RESET);
 }
 
+/**
+ * printBanner - Prints the banner of the process generator.
+ */
 void printBanner() {
   printf(ANSI_PURPLE);
   printf("                              ___\n"
@@ -194,7 +201,49 @@ void printBanner() {
       "        \\/     \\/            |__|              \\/        \\/        "
       "\\/  \n");
 
+  sleep(1);
+  printf("Welcome to OctopusOS\n");
+  sleep(1);
   printf(ANSI_RESET);
+}
+
+/**
+ * createSchedulerAndClock - Creates the scheduler and clock processes.
+ *
+ * @schedulerPid: a pointer to the scheduler process id
+ * @clockPid: a pointer to the clock process id
+ */
+void createSchedulerAndClock(pid_t *schedulerPid, pid_t *clockPid) {
+
+  *clockPid = fork();
+
+  if (*clockPid == -1) {
+    perror("Error in creating clock process");
+    exit(-1);
+  }
+
+  if (*clockPid == 0) {
+    char *args[] = {"./clk.out", NULL};
+    execvp(args[0], args);
+    exit(0);
+  }
+
+  *schedulerPid = fork();
+
+  if (*schedulerPid == -1) {
+    perror("Error in creating scheduler process");
+    exit(-1);
+  }
+
+  if (*schedulerPid == 0) {
+    char *args[] = {"./scheduler.out", NULL};
+    execvp(args[0], args);
+    exit(0);
+  }
+
+  printf(ANSI_PURPLE "|| ==>   Created Scheduler and Clock\n" ANSI_RESET);
+  printf(ANSI_PURPLE "||    ==> Scheduler PID: %d\n" ANSI_RESET, *schedulerPid);
+  printf(ANSI_PURPLE "||    ==> Clock     PID: %d\n" ANSI_RESET, *clockPid);
 }
 
 /**
