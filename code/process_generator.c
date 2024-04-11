@@ -6,6 +6,7 @@
 // ====== FUNCTION DECLARATIONS ======
 
 queue *readInputFile();
+void printBanner();
 enum scheduler_type getSchedulerType();
 void getInput(enum scheduler_type *, int *);
 void clearResources(int);
@@ -17,6 +18,7 @@ int main(int argc, char *argv[]) {
 
   signal(SIGINT, clearResources);
 
+  printBanner();
   processes = readInputFile();
   printf(ANSI_GREEN "number of processes: %ld\n" ANSI_RESET, size(processes));
 
@@ -154,6 +156,45 @@ void getInput(enum scheduler_type *schedulerType, int *quantum) {
     printf(ANSI_GREEN "|| Quantum:       |  %d    ||\n" ANSI_RESET, *quantum);
   }
   printf(ANSI_GREEN "============================\n" ANSI_RESET);
+}
+
+void printBanner() {
+  printf(ANSI_PURPLE);
+  printf("                              ___\n"
+         "                           .-'   `'.\n"
+         "                          /         \\\n"
+         "                          |         ;\n"
+         "                          |         |           ___.--,\n"
+         "                 _.._     |0) ~ (0) |    _.---'`__.-( (_.\n"
+         "          __.--'`_.. '.__.\\    '--. \\_.-' ,.--'`     \\\"\\\"\"\n"
+         "         ( ,.--'`   ',__ /./;   ;, '.__.'`    __\n"
+         "         _`) )  .---.__.' / |   |\\   \\__..--\"\"\"\"  \"\"--.,_\n"
+         "        `---' .'.''-._.-'`_./  /\\ '.  \\ _.-~~~````~~~-._`-.__.'\n"
+         "              | |  .' _.-' |  |  \\  \\  '.               `~---`\n"
+         "               \\ \\/ .'     \\  \\   '. '-._)\n"
+         "                \\/ /        \\  \\    `=.__`~-.\n"
+         "           jgs  / /\\         `) )    / / \\\"\\\"\".`\\\n"
+         "          , _.-'.'\\ \\        / /    ( (     / /\n"
+         "           `--~`   ) )    .-'.'      '.'.  | (\n"
+         "                  (/`    ( (`          ) )  '-;\n"
+         "                   `      '-;         (-'\n");
+
+  printf(
+      "________          __                             ________    "
+      "_________ \n"
+      "\\_____  \\   _____/  |_  ____ ______  __ __  _____\\_____  \\  /   "
+      "_____/ \n"
+      " /   |   \\_/ ___\\   __\\/  _ \\____ \\|  |  \\/  ___//   |   \\ "
+      "\\_____ "
+      " \\  \n"
+      "/    |    \\  \\___|  | (  <_> )  |_> >  |  /\\___ \\/    |    \\/      "
+      "  \\ \n"
+      "\\_______  /\\___  >__|  \\____/|   __/|____//____  >_______  /_______ "
+      " / \n"
+      "        \\/     \\/            |__|              \\/        \\/        "
+      "\\/  \n");
+
+  printf(ANSI_RESET);
 }
 
 /**
