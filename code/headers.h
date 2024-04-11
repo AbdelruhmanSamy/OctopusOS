@@ -44,6 +44,22 @@
 int *shmaddr; //
 //===============================
 
+// ===================================
+// ======   PROCESS GENERATOR   ======
+// ====== FUNCTION DECLARATIONS ======
+// ===================================
+
+queue *readInputFile();
+void printBanner();
+enum scheduler_type getSchedulerType();
+void getInput(enum scheduler_type *, int *);
+void clearResources(int);
+void createSchedulerAndClock(pid_t *, pid_t *);
+void sendProcessesToScheduler(queue *, int);
+int intiSchGenCom();
+
+// ===================================
+
 int getClk() { return *shmaddr; }
 
 /*

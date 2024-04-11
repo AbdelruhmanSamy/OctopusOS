@@ -1,21 +1,28 @@
+/* ====================================================================
+ * process_generator.c
+ *
+ * The process generator is responsible for reading the input file and
+ * sending the processes to the scheduler at the appropriate time.
+ * assigned to: amir-kedis
+ * ====================================================================
+ */
+
 #include "./headers.h"
 #include "queue.h"
 
-// ====== FUNCTION DECLARATIONS ======
-
-queue *readInputFile();
-void printBanner();
-enum scheduler_type getSchedulerType();
-void getInput(enum scheduler_type *, int *);
-void clearResources(int);
-void createSchedulerAndClock(pid_t *, pid_t *);
-void sendProcessesToScheduler(queue *);
-
+/**
+ * main - The main function of the process generator.
+ *
+ * @argc: the number of arguments
+ * @argv: the arguments
+ * return: 0 on success, -1 on failure
+ */
 int main(int argc, char *argv[]) {
   queue *processes;
   enum scheduler_type schedulerType;
   int quantum;
   pid_t schedulerPid, clockPid;
+  int msgQID;
 
   signal(SIGINT, clearResources);
 
@@ -29,11 +36,11 @@ int main(int argc, char *argv[]) {
   createSchedulerAndClock(&schedulerPid, &clockPid);
 
   initClk();
+  msgQID = intiSchGenCom();
 
-  sendProcessesToScheduler(processes);
+  sendProcessesToScheduler(processes, msgQID);
 
-  // 5. Create a data structure for processes and provide it with its
-  // parameters.
+  destroyQueue(processes);
   destroyClk(true);
 }
 
@@ -174,7 +181,7 @@ void printBanner() {
          "              | |  .' _.-' |  |  \\  \\  '.               `~---`\n"
          "               \\ \\/ .'     \\  \\   '. '-._)\n"
          "                \\/ /        \\  \\    `=.__`~-.\n"
-         "           jgs  / /\\         `) )    / / \\\"\\\"\".`\\\n"
+         "                / /\\         `) )    / / \\\"\\\"\".`\\\n"
          "          , _.-'.'\\ \\        / /    ( (     / /\n"
          "           `--~`   ) )    .-'.'      '.'.  | (\n"
          "                  (/`    ( (`          ) )  '-;\n"
@@ -258,10 +265,11 @@ void clearResources(int signum) {
  *
  * @processes: a pointer to the queue of processes
  */
-void sendProcessesToScheduler(queue *processes) {
+void sendProcessesToScheduler(queue *processes, int msgQID) {
   int currentTime = getClk();
   int lastTime = currentTime;
   process_t *process;
+  int response;
 
   while (!empty(processes)) {
     process = (process_t *)front(processes);
@@ -271,6 +279,8 @@ void sendProcessesToScheduler(queue *processes) {
       continue;
     }
 
+    // TODO: printing current time should be the responsibility of the scheudler
+    // or clock
     printf(ANSI_YELLOW "=>Current time: %d\n" ANSI_RESET, currentTime);
     if (currentTime < process->AT) {
       lastTime = currentTime;
@@ -280,7 +290,33 @@ void sendProcessesToScheduler(queue *processes) {
     printf(ANSI_PURPLE "=>Sending process with id: %d, AT: %d, BT: %d, "
                        "priority: %d to scheduler\n" ANSI_RESET,
            process->id, process->AT, process->BT, process->priority);
+
+    response = msgsnd(msgQID, process, sizeof(process_t), !IPC_NOWAIT);
+    if (response == -1) {
+      fprintf(stderr,
+              ANSI_RED "==>Error in sending process to scheduler\n" ANSI_RESET);
+      exit(-1);
+    }
+
     pop(processes);
     lastTime = currentTime;
   }
+}
+
+/**
+ * intiSchGenCom - Initializes the message queue between the scheduler and the
+ * process generator.
+ *
+ * return: the message queue id
+ */
+int intiSchGenCom() {
+  int key = ftok("SCH_GEN_COM", 18);
+  int msgQID = msgget(key, 0666 | IPC_CREAT);
+
+  if (msgQID == -1) {
+    perror("Error in creating message queue");
+    exit(-1);
+  }
+
+  return msgQID;
 }
