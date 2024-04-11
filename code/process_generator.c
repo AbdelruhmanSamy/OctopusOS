@@ -1,27 +1,22 @@
 #include "./headers.h"
 #include <stdio.h>
-#define MAX_PROCESSES 1000
+
+// ======     COSNTANTS         ======
+
+// ====== FUNCTION DECLARATIONS ======
+
+queue *readInputFile();
 void clearResources(int);
-void readProcesses(process_t ***processes);
 
 int main(int argc, char *argv[]) {
-  process_t **processes = malloc(MAX_PROCESSES * sizeof(process_t *));
-  for (int i = 0; i < MAX_PROCESSES; i++) {
-    processes[i] = NULL;
-  }
+  queue *processes;
 
   signal(SIGINT, clearResources);
   // TODO Initialization
   // 1. Read the input files.
-  readProcesses(&processes);
+  processes = readInputFile();
 
-  for (int i = 0; i < MAX_PROCESSES; i++) {
-    if (processes[i] == NULL) {
-      break;
-    }
-    printf("Process %d: AT: %d, BT: %d, Priority: %d\n", processes[i]->id,
-           processes[i]->AT, processes[i]->BT, processes[i]->priority);
-  }
+  printf(ANSI_GREEN "number of processes: %ld\n" ANSI_RESET, size(processes));
 
   // 2. Ask the user for the chosen scheduling algorithm and its parameters, if
   // there are any.
@@ -39,31 +34,51 @@ int main(int argc, char *argv[]) {
   destroyClk(true);
 }
 
-void readProcesses(process_t ***processes) {
-  process_t *newProcess;
+/**
+ * readInputFile - Reads the input file and stores the data in the data
+ * structure.
+ *
+ * return: a pointer to the queue of processes
+ */
+queue *readInputFile() {
   FILE *file;
-  int i = 0;
+  char *line = NULL;
+  size_t len = 0;
+  queue *processes = createQueue();
+
+  printf(ANSI_YELLOW "============================" ANSI_RESET "\n");
+  printf(ANSI_YELLOW "|| Reading processes file ||" ANSI_RESET "\n");
+  printf(ANSI_YELLOW "============================" ANSI_RESET "\n");
 
   file = fopen("processes.txt", "r");
-
   if (file == NULL) {
     perror("Error in opening file");
-    return;
+    exit(-1);
   }
-  fscanf(file, "%*[^\n]\n"); // skip the first line
-  // while (!feof(file)) {
-  //   int ID, AT, BT, priority;
-  //   fscanf(file, "%d %d %d %d", &ID, &AT, &BT, &priority);
-  //   printf("ID: %d, AT: %d, BT: %d, Priority: %d\n", ID, AT, BT, priority);
-  // }
 
-  while (!feof(file)) {
-    newProcess = malloc(sizeof(process_t));
-    fscanf(file, "%d %d %d %d", &newProcess->id, &newProcess->AT,
+  while (getline(&line, &len, file) != -1) {
+
+    if (line[0] == '#') {
+      continue;
+    }
+    process_t *newProcess = malloc(sizeof(process_t));
+    sscanf(line, "%d %d %d %d", &newProcess->id, &newProcess->AT,
            &newProcess->BT, &newProcess->priority);
-    (*processes)[i] = newProcess;
-    i++;
+    push(processes, newProcess);
+    printf(ANSI_PURPLE "=>Inserted process with id: %d, AT: %d, BT: %d, "
+                       "priority: %d into processes queue\n" ANSI_RESET,
+           newProcess->id, newProcess->AT, newProcess->BT,
+           newProcess->priority);
   }
+
+  free(line);
+  fclose(file);
+
+  printf(ANSI_YELLOW "============================" ANSI_RESET "\n");
+  printf(ANSI_YELLOW "|| Finished reading file   ||" ANSI_RESET "\n");
+  printf(ANSI_YELLOW "============================" ANSI_RESET "\n");
+
+  return processes;
 }
 
 void clearResources(int signum) {
