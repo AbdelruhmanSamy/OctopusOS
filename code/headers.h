@@ -1,3 +1,4 @@
+#include <errno.h>
 #include <signal.h>
 #include <stdbool.h>
 #include <stdio.h> //if you don't use scanf/printf change this include
@@ -37,6 +38,9 @@
 #define true 1
 #define false 0
 
+// key proj_ids
+#define SCH_GEN_COM 5
+
 #define SHKEY 300
 
 ///==============================
@@ -51,10 +55,9 @@ int *shmaddr; //
 
 queue *readInputFile();
 void printBanner();
-enum scheduler_type getSchedulerType();
-void getInput(enum scheduler_type *, int *);
-void clearResources(int);
-void createSchedulerAndClock(pid_t *, pid_t *);
+scheduler_type getSchedulerType();
+void getInput(scheduler_type *, int *);
+void createSchedulerAndClock(pid_t *, pid_t *, int);
 void sendProcessesToScheduler(queue *, int);
 int intiSchGenCom();
 
@@ -85,10 +88,25 @@ void initClk() {
  * Input: terminateAll: a flag to indicate whether that this is the end of
  * simulation. It terminates the whole system and releases resources.
  */
-
 void destroyClk(bool terminateAll) {
   shmdt(shmaddr);
   if (terminateAll) {
     killpg(getpgrp(), SIGINT);
   }
+}
+
+void cleanUp() {
+  destroyClk(true);
+  killpg(getpgrp(), SIGINT);
+}
+
+/**
+ * clearResources - Clears all resources in case of interruption.
+ *
+ * @signum: the signal number
+ */
+void clearResources(int signum) {
+  // TODO: Clears all resources in case of interruption
+  cleanUp();
+  exit(0);
 }
