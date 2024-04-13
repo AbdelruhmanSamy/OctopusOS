@@ -24,16 +24,12 @@ min_heap* createMinHeap(int (*comp)(void *, void *))
  * pass a void pointer to the element you want to insert
 */
 void insertMinHeap(min_heap** heap, void * element)
-{
-    printf("entered insertion safely\n");
-    printHeap((*heap));
-    
+{    
     if((*heap)->size == (*heap)->capacity)
         (*heap) = *doubleCapacity((*heap));
     
     (*heap)->arr[(*heap)->size] = element;
     (*heap)->size++;
-    printf("arr[%ld]: %d\n" , (*heap)->size-1 , (int*)(*heap)->arr[(*heap)->size-1]);
     decreaseKey((*heap) , (*heap)->size-1);
 }
 
@@ -42,9 +38,6 @@ void insertMinHeap(min_heap** heap, void * element)
 */
 void * extractMin(min_heap * heap)
 {
-    printf("entered extraction!!\n");
-    printHeap(heap);
-
     void* minElement = heap->arr[0];
     heap->size--;
     heap->arr[0] = heap->arr[heap->size];
@@ -121,10 +114,8 @@ min_heap** doubleCapacity(min_heap *heap)
     for(int i = 0 ; i<heap->size ; i++)
         newHeap->arr[i] = heap->arr[i];
 
-    printf("doubling occured!!\n");
     min_heap** returnval = &newHeap;
-    printHeap(*returnval);
-    return returnval;
+    return returnval;       
 }
 
 void swap(void ** arr, int ind1, int ind2)
