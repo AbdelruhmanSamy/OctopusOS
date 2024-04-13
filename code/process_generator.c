@@ -19,12 +19,17 @@
  */
 int main(int argc, char *argv[]) {
   queue *processes;
-  enum scheduler_type schedulerType;
+  scheduler_type schedulerType;
   int quantum;
   pid_t schedulerPid, clockPid;
   int msgQID;
 
   signal(SIGINT, clearResources);
+  signal(SIGTERM, clearResources);
+  if (atexit(cleanUp) != 0) {
+    perror("atexit");
+    exit(1);
+  }
 
   printBanner();
 
@@ -33,14 +38,18 @@ int main(int argc, char *argv[]) {
 
   getInput(&schedulerType, &quantum);
 
-  createSchedulerAndClock(&schedulerPid, &clockPid);
+  createSchedulerAndClock(&schedulerPid, &clockPid, (int)schedulerType);
 
   initClk();
   msgQID = intiSchGenCom();
 
   sendProcessesToScheduler(processes, msgQID);
-
   destroyQueue(processes);
+
+  if (wait(NULL) == -1) {
+    perror("wait");
+    exit(1);
+  }
   destroyClk(true);
 }
 
@@ -54,7 +63,7 @@ queue *readInputFile() {
   FILE *file;
   char *line = NULL;
   size_t len = 0;
-  queue *processes = createQueue();
+  queue *processes = createQueue(free);
 
   printf(ANSI_YELLOW "============================" ANSI_RESET "\n");
   printf(ANSI_YELLOW "|| Reading processes file ||" ANSI_RESET "\n");
@@ -97,7 +106,7 @@ queue *readInputFile() {
  *
  * return: the chosen scheduler type
  */
-enum scheduler_type getSchedulerType() {
+scheduler_type getSchedulerType() {
   int choice;
 
   printf(ANSI_TEAL "==========================================================="
@@ -123,7 +132,7 @@ enum scheduler_type getSchedulerType() {
   case 3:
     return RR;
   default:
-    return -1;
+    exit(-1);
   }
 }
 
@@ -134,7 +143,7 @@ enum scheduler_type getSchedulerType() {
  * @schedulerType: a pointer to the chosen scheduler type
  * @quantum: a pointer to the quantum value
  */
-void getInput(enum scheduler_type *schedulerType, int *quantum) {
+void getInput(scheduler_type *schedulerType, int *quantum) {
   *schedulerType = getSchedulerType();
 
   if (*schedulerType == -1) {
@@ -214,7 +223,8 @@ void printBanner() {
  * @schedulerPid: a pointer to the scheduler process id
  * @clockPid: a pointer to the clock process id
  */
-void createSchedulerAndClock(pid_t *schedulerPid, pid_t *clockPid) {
+void createSchedulerAndClock(pid_t *schedulerPid, pid_t *clockPid,
+                             int schedulerType) {
 
   *clockPid = fork();
 
@@ -237,7 +247,23 @@ void createSchedulerAndClock(pid_t *schedulerPid, pid_t *clockPid) {
   }
 
   if (*schedulerPid == 0) {
-    char *args[] = {"./scheduler.out", NULL};
+    char *type;
+
+    switch (schedulerType) {
+    case 0:
+      type = "0";
+      break;
+    case 1:
+      type = "1";
+      break;
+    case 2:
+      type = "2";
+      break;
+    default:
+      exit(-1);
+    }
+
+    char *args[] = {"./scheduler.out", type, NULL};
     execvp(args[0], args);
     exit(0);
   }
@@ -245,18 +271,6 @@ void createSchedulerAndClock(pid_t *schedulerPid, pid_t *clockPid) {
   printf(ANSI_PURPLE "|| ==>   Created Scheduler and Clock\n" ANSI_RESET);
   printf(ANSI_PURPLE "||    ==> Scheduler PID: %d\n" ANSI_RESET, *schedulerPid);
   printf(ANSI_PURPLE "||    ==> Clock     PID: %d\n" ANSI_RESET, *clockPid);
-}
-
-/**
- * clearResources - Clears all resources in case of interruption.
- *
- * @signum: the signal number
- */
-void clearResources(int signum) {
-  // TODO: Clears all resources in case of interruption
-  destroyClk(true);
-  killpg(getpgrp(), SIGINT);
-  exit(0);
 }
 
 /**
@@ -293,13 +307,19 @@ void sendProcessesToScheduler(queue *processes, int msgQID) {
 
     response = msgsnd(msgQID, process, sizeof(process_t), !IPC_NOWAIT);
     if (response == -1) {
-      fprintf(stderr,
-              ANSI_RED "==>Error in sending process to scheduler\n" ANSI_RESET);
+      perror("Error in sending process to scheduler\n");
       exit(-1);
     }
 
     pop(processes);
     lastTime = currentTime;
+  }
+
+  process->id = -1;
+  response = msgsnd(msgQID, process, sizeof(process_t), !IPC_NOWAIT);
+  if (response == -1) {
+    perror("Error in terminating sending processes to scheduler\n");
+    exit(-1);
   }
 }
 
@@ -310,7 +330,7 @@ void sendProcessesToScheduler(queue *processes, int msgQID) {
  * return: the message queue id
  */
 int intiSchGenCom() {
-  int key = ftok("SCH_GEN_COM", 18);
+  int key = ftok("keyfiles/SCH_GEN_COM", SCH_GEN_COM);
   int msgQID = msgget(key, 0666 | IPC_CREAT);
 
   if (msgQID == -1) {
