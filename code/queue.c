@@ -7,63 +7,56 @@
  *
  * return a pointer to the queue, NULL on failure
  */
-queue *createQueue()
-{
-    queue *newQueue = malloc(sizeof(*newQueue));
+queue *createQueue(void (*free_func)(void *)) {
+  queue *newQueue = malloc(sizeof(*newQueue));
 
-    if (!newQueue)
-        return NULL;
+  if (!newQueue)
+    return NULL;
 
-    newQueue->list = createList();
+  newQueue->list = createList(free_func);
 
-    if (!newQueue->list)
-        return NULL;
+  if (!newQueue->list)
+    return NULL;
 
-    return newQueue;
+  return newQueue;
 }
 
 /**
  * return 1 if the queue is empty or not created, 0 otherwise
-*/
-int empty(queue *q)
-{
-    if (!q)
-        return 1; //! may need to change this 
+ */
+int empty(queue *q) {
+  if (!q)
+    return 1; //! may need to change this
 
-    return (q->list->size == 0);
+  return (q->list->size == 0);
 }
 
 /**
  * get number of elements in queue
-*/
-size_t size(queue *q)
-{
-    return q->list->size;
-}
+ */
+size_t size(queue *q) { return q->list->size; }
 
 /**
  * add an item to the end of the queue
  * @q: pointer to queue
  * @item: element to add (pointer)
  */
-void push(queue *q, void *item)
-{
-    if (!q)
-        return;
+void push(queue *q, void *item) {
+  if (!q)
+    return;
 
-    insertNodeEnd(q->list, item);
+  insertNodeEnd(q->list, item);
 }
 
 /**
  * remove the first element from the queue
  * @q: pointer to queue
  */
-void pop(queue *q)
-{
-    if (empty(q))
-        return;
-    
-    deleteNodeStart(q->list);
+void pop(queue *q) {
+  if (empty(q))
+    return;
+
+  deleteNodeStart(q->list);
 }
 
 /**
@@ -71,14 +64,13 @@ void pop(queue *q)
  * without removing it,
  * NULL if empty
  * @q: pointer to queue
-*/
-void *front(queue *q)
-{
-    if (empty(q))
-        return NULL;
+ */
+void *front(queue *q) {
+  if (empty(q))
+    return NULL;
 
-    d_node *n = getNode(q->list, 0);
-    return n->data;
+  d_node *n = getNode(q->list, 0);
+  return n->data;
 }
 
 /**
@@ -86,22 +78,20 @@ void *front(queue *q)
  * without removing it
  * NULL if empty
  * @q: pointer to queue
-*/
-void *back(queue *q)
-{
-    if (empty(q))
-        return NULL;
+ */
+void *back(queue *q) {
+  if (empty(q))
+    return NULL;
 
-    d_node *n = getNode(q->list, q->list->size - 1);
-    return n->data;
+  d_node *n = getNode(q->list, q->list->size - 1);
+  return n->data;
 }
 
 /**
  * clear all and free memory
  * @q: pointer to queue
-*/
-void destroyQueue(queue * q)
-{
-    destroyList(q->list);
-    free(q);
+ */
+void destroyQueue(queue *q) {
+  destroyList(&q->list);
+  free(q);
 }
