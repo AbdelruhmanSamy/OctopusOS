@@ -1,5 +1,4 @@
-#ifndef LIST
-#define LIST
+#pragma once
 
 #include <stdlib.h>
 
@@ -46,5 +45,3 @@ int deleteNode(d_list *list, unsigned int index);
 void freeNode(d_list *list, d_node *node);
 void freeList(d_list *list);
 void destroyList(d_list **list);
-
-#endif
