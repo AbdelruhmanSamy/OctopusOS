@@ -7,8 +7,8 @@
  * ====================================================================
  */
 
-#include "./headers.h"
-#include "queue.h"
+#include "process_generator.h"
+#include "headers.h"
 
 /**
  * main - The main function of the process generator.
@@ -41,7 +41,7 @@ int main(int argc, char *argv[]) {
   createSchedulerAndClock(&schedulerPid, &clockPid, (int)schedulerType);
 
   initClk();
-  msgQID = intiSchGenCom();
+  msgQID = initSchGenCom();
 
   sendProcessesToScheduler(processes, msgQID);
   destroyQueue(processes);
@@ -321,22 +321,4 @@ void sendProcessesToScheduler(queue *processes, int msgQID) {
     perror("Error in terminating sending processes to scheduler\n");
     exit(-1);
   }
-}
-
-/**
- * intiSchGenCom - Initializes the message queue between the scheduler and the
- * process generator.
- *
- * return: the message queue id
- */
-int intiSchGenCom() {
-  int key = ftok("keyfiles/SCH_GEN_COM", SCH_GEN_COM);
-  int msgQID = msgget(key, 0666 | IPC_CREAT);
-
-  if (msgQID == -1) {
-    perror("Error in creating message queue");
-    exit(-1);
-  }
-
-  return msgQID;
 }

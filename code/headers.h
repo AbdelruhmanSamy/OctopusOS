@@ -1,3 +1,5 @@
+#pragma once
+
 #include <errno.h>
 #include <signal.h>
 #include <stdbool.h>
@@ -12,11 +14,6 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
-///==============================
-// CUSTOM INCLUDES
-//===============================
-#include "./queue.h"
-#include "./structs.h"
 
 //===============================
 // CONSTANTS
@@ -38,30 +35,14 @@
 #define true 1
 #define false 0
 
-// key proj_ids
 #define SCH_GEN_COM 5
 
 #define SHKEY 300
 
 ///==============================
 // don't mess with this variable//
-int *shmaddr; //
+int *shmaddr;
 //===============================
-
-// ===================================
-// ======   PROCESS GENERATOR   ======
-// ====== FUNCTION DECLARATIONS ======
-// ===================================
-
-queue *readInputFile();
-void printBanner();
-scheduler_type getSchedulerType();
-void getInput(scheduler_type *, int *);
-void createSchedulerAndClock(pid_t *, pid_t *, int);
-void sendProcessesToScheduler(queue *, int);
-int intiSchGenCom();
-
-// ===================================
 
 int getClk() { return *shmaddr; }
 
@@ -95,7 +76,15 @@ void destroyClk(bool terminateAll) {
   }
 }
 
+//===============================
+// CUSTOM COMMON FUNCTIONS
+//===============================
+
+/**
+ * cleanUp - Make necessary cleaning
+ */
 void cleanUp() {
+  // TODO any other needed clean up
   destroyClk(true);
   killpg(getpgrp(), SIGINT);
 }
@@ -106,7 +95,24 @@ void cleanUp() {
  * @signum: the signal number
  */
 void clearResources(int signum) {
-  // TODO: Clears all resources in case of interruption
   cleanUp();
   exit(0);
+}
+
+/**
+ * intiSchGenCom - Initializes the message queue between the scheduler and the
+ * process generator.
+ *
+ * return: the message queue id
+ */
+int initSchGenCom() {
+  int key = ftok("keyfiles/SCH_GEN_COM", SCH_GEN_COM);
+  int msgQID = msgget(key, 0666 | IPC_CREAT);
+
+  if (msgQID == -1) {
+    perror("Error in creating message queue");
+    exit(-1);
+  }
+
+  return msgQID;
 }

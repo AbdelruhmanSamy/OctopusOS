@@ -1,6 +1,6 @@
 // copyright 2024: Abderlrahman Samy - George Magdy - Ahmed Hamed - Amir Anwar
+#pragma once
 
-#include <signal.h>
 typedef enum scheduler_type { HPF, SRTN, RR } scheduler_type;
 
 typedef enum process_state { READY, RUNNING, BLOCKED } process_state;
