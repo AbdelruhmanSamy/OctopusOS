@@ -25,6 +25,7 @@
 #define ANSI_YELLOW "\x1b[33m"
 #define ANSI_BLUE "\x1b[34m"
 #define ANSI_MAGENTA "\x1b[35m"
+#define ANSI_GREY "\x1b[90m"
 #define ANSI_CYAN "\x1b[36m"
 #define ANSI_TEAL "\x1b[96m"
 #define ANSI_WHITE "\x1b[37m"
@@ -42,7 +43,7 @@
 //===============================
 // ARGUMENTS
 //===============================
-const int DEBUG = false; // set to true to enable debug prints
+const int DEBUG = true;  // set to true to enable debug prints
 const int DELAY = false; // set to true to add delay
 
 ///==============================
