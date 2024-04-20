@@ -39,6 +39,12 @@
 
 #define SHKEY 300
 
+//===============================
+// ARGUMENTS
+//===============================
+const int DEBUG = false; // set to true to enable debug prints
+const int DELAY = false; // set to true to add delay
+
 ///==============================
 // don't mess with this variable//
 int *shmaddr;
@@ -55,7 +61,8 @@ void initClk() {
   int shmid = shmget(SHKEY, 4, 0444);
   while ((int)shmid == -1) {
     // Make sure that the clock exists
-    printf("Wait! The clock not initialized yet!\n");
+    if (DEBUG)
+      printf("Wait! The clock not initialized yet!\n");
     sleep(1);
     shmid = shmget(SHKEY, 4, 0444);
   }

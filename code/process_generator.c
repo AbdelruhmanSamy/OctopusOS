@@ -211,9 +211,11 @@ void printBanner() {
       "        \\/     \\/            |__|              \\/        \\/        "
       "\\/  \n");
 
-  sleep(1);
+  if (DELAY)
+    sleep(1);
   printf("Welcome to OctopusOS\n");
-  sleep(1);
+  if (DELAY)
+    sleep(1);
   printf(ANSI_RESET);
 }
 
