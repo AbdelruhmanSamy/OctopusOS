@@ -26,6 +26,7 @@ int main(int argc, char *argv[]) {
 
   signal(SIGINT, clearSchResources);
   signal(SIGTERM, clearSchResources);
+
   if (atexit(cleanUpScheduler) != 0) {
     perror("atexit");
     exit(1);
@@ -124,6 +125,16 @@ void getProcesses(int gen_msgQID, d_list *processTable) {
            process.id);
     createProcess(processTable, &process);
   }
+  // FIXME: delete later just for testing
+  {
+    sleep(3);
+    preemptProcessByIndex(processTable, 0);
+    sleep(1);
+    resumeProcessByIndex(processTable, 0);
+    preemptProcessByIndex(processTable, 1);
+    sleep(1);
+    resumeProcessByIndex(processTable, 1);
+  }
 }
 
 /**
@@ -204,4 +215,42 @@ void cleanUpScheduler() {
 void clearSchResources(int signum) {
   cleanUpScheduler();
   exit(0);
+}
+
+/**
+ * preemptProcessByIndex - Preempt a process by its index in the process table
+ * @processTable: pointer to process table
+ * @index: index of the process to preempt
+ */
+void preemptProcessByIndex(d_list *processTable, unsigned int index) {
+  process_entry_t *processEntry = getNode(processTable, index)->data;
+  PCB_t *pcb = processEntry->PCB;
+
+  if (DEBUG)
+    printf(ANSI_GREY "==>SCH: Preempting process with id = %i\n" ANSI_RESET,
+           processEntry->p_id);
+
+  if (pcb->state == RUNNING) {
+    kill(processEntry->p_id, SIGSTOP);
+    pcb->state = READY;
+  }
+}
+
+/**
+ * resumeProcessByIndex - Resume a process by its index in the process table
+ * @processTable: pointer to process table
+ * @index: index of the process to resume
+ */
+void resumeProcessByIndex(d_list *processTable, unsigned int index) {
+  process_entry_t *processEntry = getNode(processTable, index)->data;
+  PCB_t *pcb = processEntry->PCB;
+
+  if (DEBUG)
+    printf(ANSI_GREEN "==>SCH: Resuming process with id = %i\n" ANSI_RESET,
+           processEntry->p_id);
+
+  if (pcb->state == READY) {
+    kill(processEntry->p_id, SIGCONT);
+    pcb->state = RUNNING;
+  }
 }
