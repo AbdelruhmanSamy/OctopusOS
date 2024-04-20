@@ -295,15 +295,12 @@ void sendProcessesToScheduler(queue *processes, int msgQID) {
       continue;
     }
 
-    // TODO: printing current time should be the responsibility of the scheudler
-    // or clock
-    printf(ANSI_YELLOW "=>Current time: %d\n" ANSI_RESET, currentTime);
     if (currentTime < process->AT) {
       lastTime = currentTime;
       continue;
     }
 
-    printf(ANSI_PURPLE "=>Sending process with id: %d, AT: %d, BT: %d, "
+    printf(ANSI_PURPLE "=>GEN:Sending process with id: %d, AT: %d, BT: %d, "
                        "priority: %d to scheduler\n" ANSI_RESET,
            process->id, process->AT, process->BT, process->priority);
 

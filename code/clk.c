@@ -34,6 +34,7 @@ int main(int argc, char *argv[]) {
   }
   *shmaddr = clk; /* initialize shared memory */
   while (1) {
+    printf(ANSI_YELLOW "=>CLK:Current time: %d\n" ANSI_RESET, (*shmaddr));
     sleep(1);
     (*shmaddr)++;
   }
