@@ -139,6 +139,16 @@ void getProcesses(int gen_msgQID, d_list *processTable) {
     sleep(1);
     resumeProcessByIndex(processTable, 1);
   }
+  // FIXME: delete later just for testing
+  {
+    sleep(3);
+    preemptProcessByIndex(processTable, 0);
+    sleep(1);
+    resumeProcessByIndex(processTable, 0);
+    preemptProcessByIndex(processTable, 1);
+    sleep(1);
+    resumeProcessByIndex(processTable, 1);
+  }
 }
 
 /**
