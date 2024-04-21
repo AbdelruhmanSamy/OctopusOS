@@ -308,6 +308,8 @@ void sendProcessesToScheduler(queue *processes, int msgQID) {
     process->WT = 0;
     process->TA = 0;
     process->LST = currentTime;
+    process->ST = -1;
+    process->FT = -1;
 
     response = msgsnd(msgQID, process, sizeof(process_t), !IPC_NOWAIT);
     if (response == -1) {

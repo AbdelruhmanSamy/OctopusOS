@@ -19,3 +19,4 @@ void clearSchResources(int signum);
 // with pid
 void preemptProcessByIndex(d_list *processTable, unsigned int index);
 void resumeProcessByIndex(d_list *processTable, unsigned int index);
+// TODO: make 2 functions for start and termination
