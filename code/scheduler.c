@@ -184,6 +184,15 @@ void createProcess(d_list *processTable, process_t *process) {
     exit(-1);
   }
 
+  // TODO: make state a shmd between each process and the scheduler
+  // TODO: make semaphors to acess the shmd correctly
+  // TODO: create a queue between scheduler and each process to be able to signal it's termination
+  // TODO: make any cleaning upon process termination
+  // TODO: update cleaninig functions already existing in the scheduler to clear any ipcs
+  // TODO: Delete the data of a process when it gets notifies that it finished. 
+  // When a process finishes it should notify the scheduler on termination, the scheduler
+  // does NOT terminate the process. 
+  
   pcb->state = READY;
   pcb->process = *process;
   processEntry->p_id = pid;
