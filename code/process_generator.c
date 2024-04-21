@@ -303,6 +303,11 @@ void sendProcessesToScheduler(queue *processes, int msgQID) {
     printf(ANSI_PURPLE "=>GEN:Sending process with id: %d, AT: %d, BT: %d, "
                        "priority: %d to scheduler\n" ANSI_RESET,
            process->id, process->AT, process->BT, process->priority);
+    // TODO: check this intial values later
+    process->RT = 0;
+    process->WT = 0;
+    process->TA = 0;
+    process->LST = currentTime;
 
     response = msgsnd(msgQID, process, sizeof(process_t), !IPC_NOWAIT);
     if (response == -1) {
