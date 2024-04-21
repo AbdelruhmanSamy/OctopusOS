@@ -37,6 +37,7 @@
 #define false 0
 
 #define SCH_GEN_COM 5
+#define SCH_PRO_COM 6 
 
 #define SHKEY 300
 

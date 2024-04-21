@@ -19,3 +19,17 @@ void clearSchResources(int signum);
 // with pid
 void preemptProcessByIndex(d_list *processTable, unsigned int index);
 void resumeProcessByIndex(d_list *processTable, unsigned int index);
+
+//===============================
+// IPC Functions
+//===============================
+// TODO: create a queue between scheduler and all processes to be able to signal 
+// it's termination
+int initSchProQ();
+
+// TODO: make state a shmd between each process and the scheduler
+void initSchProShm(int pid , PCB_t* pcb);
+
+// TODO: make semaphors to acess the shmd correctly
+int initSchProSem(int pid);
+

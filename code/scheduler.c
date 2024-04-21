@@ -167,6 +167,7 @@ void createProcess(d_list *processTable, process_t *process) {
   }
 
   if (pid == 0) {
+
     char *args[] = {"./process.out", NULL};
     execvp(args[0], args);
     exit(0);
@@ -184,19 +185,24 @@ void createProcess(d_list *processTable, process_t *process) {
     exit(-1);
   }
 
-  // TODO: make state a shmd between each process and the scheduler
-  // TODO: make semaphors to acess the shmd correctly
-  // TODO: create a queue between scheduler and each process to be able to signal it's termination
+
+  
+  int semid = initSchProSem(pid);
+  initSchProShm(pid , pcb);
+  
+
   // TODO: make any cleaning upon process termination
   // TODO: update cleaninig functions already existing in the scheduler to clear any ipcs
   // TODO: Delete the data of a process when it gets notifies that it finished. 
   // When a process finishes it should notify the scheduler on termination, the scheduler
   // does NOT terminate the process. 
-  
+
+
   pcb->state = READY;
   pcb->process = *process;
   processEntry->p_id = pid;
   processEntry->PCB = pcb;
+
   if (!insertNodeEnd(processTable, processEntry)) {
     perror("insertNodeEnd");
     exit(-1);
@@ -262,4 +268,51 @@ void resumeProcessByIndex(d_list *processTable, unsigned int index) {
     kill(processEntry->p_id, SIGCONT);
     pcb->state = RUNNING;
   }
+}
+
+int initSchProQ()
+{
+  int id = ftok("keyfiles/PRO_SCH_Q" , SCH_PRO_COM);
+  int q_id=msgget(id , IPC_CREAT | 0666);
+
+  if(q_id == -1){
+    perror("error in creating msg queue between process & scheduler");
+    exit(-1);
+  }else if(DEBUG){
+    printf("Message queue created sucessfully with pid = %d\n" , q_id);
+  } 
+
+  return q_id;
+}
+
+void initSchProShm(int pid , PCB_t* pcb)
+{
+  int id2 = ftok("keyfiles/PRO_SCH_SHM" , pid);
+  int shmid = shmget(id2 , sizeof(pcb->state) ,IPC_CREAT | 0666);
+ 
+  if(shmid == -1){
+    perror("error in creating shared memory\n");
+    exit(-1);
+  }
+ 
+  int shmAdd = shmat(shmid , &pcb->state , 0);
+  if(shmAdd != &pcb->state){
+    perror("address of shared memory is not the address of the state\n");
+    exit(-1);
+  }
+}
+
+int initSchProSem(int pid)
+{
+  int id = ftok("keyfiles/PRO_SCH_SEM" , pid);
+  int semid = semget(pid , 1 ,IPC_CREAT | 0666);
+  
+  if(semid == -1){
+    perror("error in creating semaphor\n");
+    exit(-1);
+  }else if (DEBUG){
+    printf("Semaphor created sucessfully with pid = %d\n" , semid);
+  }
+
+  return semid;
 }
