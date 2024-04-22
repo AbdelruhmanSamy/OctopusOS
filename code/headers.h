@@ -14,6 +14,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#include <string.h>
 
 //===============================
 // CONSTANTS
@@ -32,11 +33,11 @@
 #define ANSI_PURPLE "\x1b[35m"
 #define ANSI_RESET "\x1b[0m"
 
-#define short bool;
 #define true 1
 #define false 0
 
 #define SCH_GEN_COM 5
+#define SCH_PRO_COM 6 
 
 #define SHKEY 300
 
@@ -124,3 +125,50 @@ int initSchGenCom() {
 
   return msgQID;
 }
+
+void up(int semid){
+  struct sembuf sembuff;
+  sembuff.sem_num = 0;
+  sembuff.sem_op = 1;
+  sembuff.sem_flg = !IPC_NOWAIT;
+
+  if(semop(semid, &sembuff ,1)==-1){
+    perror("Error in up operation");
+    exit(-1);
+  }
+  else if (DEBUG){
+    printf("up operation performed sucessfully with semid = %d\n" , semid);
+  }
+}
+
+void down(int semid){
+  struct sembuf sembuff;
+  sembuff.sem_num =0;
+  sembuff.sem_op = -1;
+  sembuff.sem_flg = !IPC_NOWAIT;
+
+  if(semop(semid , &sembuff , 1) == -1){
+    perror("Error in down operation");
+    exit(-1);
+  }
+  else if (DEBUG){
+    printf("Down operation performed sucessfully of semid = %d\n" , semid);
+  }
+}
+
+int initSchProShm(int pid )
+{
+  int id2 = ftok("keyfiles/PRO_SCH_SHM" , pid);
+  int shmid = shmget(id2 , sizeof(int) ,IPC_CREAT | 0666);
+ 
+  if(shmid == -1){
+    perror("error in creating shared memory\n");
+    exit(-1);
+  }
+  else if (DEBUG){
+    printf("shmadd created sucessfully\n");
+  }
+  fflush(stdout);
+
+  return shmid;
+} 

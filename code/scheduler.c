@@ -26,7 +26,7 @@ int main(int argc, char *argv[]) {
 
   signal(SIGINT, clearSchResources);
   signal(SIGTERM, clearSchResources);
-
+  signal(SIGUSR1 , sigUsr1Handler);
   if (atexit(cleanUpScheduler) != 0) {
     perror("atexit");
     exit(1);
@@ -124,6 +124,7 @@ void getProcesses(int gen_msgQID, d_list *processTable) {
     printf(ANSI_BLUE "==>SCH: Received process with id = %i\n" ANSI_RESET,
            process.id);
     createProcess(processTable, &process);
+
     // TODO: change later
     // change this later instead of preempting just stop
     // because of the stats effect
@@ -163,19 +164,6 @@ void createProcess(d_list *processTable, process_t *process) {
   process_entry_t *processEntry;
   PCB_t *pcb;
 
-  pid = fork();
-
-  if (pid == -1) {
-    perror("fork");
-    exit(-1);
-  }
-
-  if (pid == 0) {
-    char *args[] = {"./process.out", NULL};
-    execvp(args[0], args);
-    exit(0);
-  }
-
   processEntry = malloc(sizeof(*processEntry));
   if (!processEntry) {
     perror("malloc");
@@ -192,12 +180,35 @@ void createProcess(d_list *processTable, process_t *process) {
   pcb->process = *process;
   processEntry->p_id = pid;
   processEntry->PCB = pcb;
+  
+
+  pid = fork();
+
+  int shmid = initSchProShm(pid);
+  int* shmAdd = (int*)shmat(shmid , (void*)0 , 0);
+  
+  pcb->process.RT = shmAdd;
+  *pcb->process.RT = process->BT;
+  
+  if (pid == -1) {
+    perror("fork");
+    exit(-1);
+  }
+
+  if (pid == 0) {
+    char *args[] = {"./process.out" , NULL}; 
+    execvp(args[0], args);
+    exit(0);
+  } 
+
+ 
   if (!insertNodeEnd(processTable, processEntry)) {
     perror("insertNodeEnd");
     exit(-1);
   }
 
   printf(ANSI_GREEN "==>SCH: Added process to processes table\n" ANSI_RESET);
+  
 }
 
 /**
@@ -259,4 +270,27 @@ void resumeProcessByIndex(d_list *processTable, unsigned int index) {
     pcb->state = RUNNING;
     pcb->process.WT += getClk() - pcb->process.LST;
   }
+}
+
+int initSchProQ()
+{
+  int id = ftok("keyfiles/PRO_SCH_Q" , SCH_PRO_COM);
+  int q_id=msgget(id , IPC_CREAT | 0666);
+
+  if(q_id == -1){
+    perror("error in creating msg queue between process & scheduler");
+    exit(-1);
+  }else if(DEBUG){
+    printf("Message queue created sucessfully with pid = %d\n" , q_id);
+  } 
+
+  return q_id;
+}
+
+void sigUsr1Handler(int signum)
+{
+  //TODO: write an appropriate implementation for this function
+    //detach the scheduler from the sharedmemory of the rem. time
+    //of this process (the running one)
+  raise(SIGKILL);
 }

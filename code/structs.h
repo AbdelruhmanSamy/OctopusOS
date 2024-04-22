@@ -15,7 +15,7 @@ typedef struct process {
   int WT;       // waiting time
   int LST;      // Last Stop time (last time the process was stopped)
                 //   used to calculate the waiting time
-  int RT;       // remaining time
+  int* RT;       // remaining time
   int TA;       // turnaround time
 } process_t;
 
@@ -24,12 +24,20 @@ typedef struct PCB {
   process_t process;
 } PCB_t;
 
+
 typedef struct process_entry {
   int p_id;
-  PCB_t *PCB;
+  PCB_t* PCB;
 } process_entry_t;
 
 typedef struct cleanup_data {
   int msgQID;
   void *processTable;
 } cleanup_data_t;
+
+union SemUn{
+    int val;               /* Value for SETVAL */
+    struct semid_ds *buf;  /* Buffer for IPC_STAT, IPC_SET */
+    unsigned short *array; /* Array for GETALL, SETALL */
+    struct seminfo *__buf; /* Buffer for IPC_INFO (Linux-specific) */   
+};
