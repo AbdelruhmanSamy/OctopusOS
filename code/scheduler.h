@@ -26,5 +26,4 @@ void resumeProcessByIndex(d_list *processTable, unsigned int index);
 // TODO: create a queue between scheduler and all processes to be able to signal 
 // it's termination
 int initSchProQ();
-
 void sigUsr1Handler(int signum);

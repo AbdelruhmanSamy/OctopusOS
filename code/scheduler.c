@@ -125,6 +125,10 @@ void getProcesses(int gen_msgQID, d_list *processTable) {
            process.id);
     createProcess(processTable, &process);
 
+    // TODO: change later
+    // change this later instead of preempting just stop
+    // because of the stats effect
+    preemptProcessByIndex(processTable, process.id - 1);
   }
   // FIXME: delete later just for testing
   {
@@ -244,6 +248,7 @@ void preemptProcessByIndex(d_list *processTable, unsigned int index) {
   if (pcb->state == RUNNING) {
     kill(processEntry->p_id, SIGSTOP);
     pcb->state = READY;
+    pcb->process.LST = getClk();
   }
 }
 
@@ -263,6 +268,7 @@ void resumeProcessByIndex(d_list *processTable, unsigned int index) {
   if (pcb->state == READY) {
     kill(processEntry->p_id, SIGCONT);
     pcb->state = RUNNING;
+    pcb->process.WT += getClk() - pcb->process.LST;
   }
 }
 
