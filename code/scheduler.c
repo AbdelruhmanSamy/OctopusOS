@@ -8,6 +8,8 @@
 
 #include "scheduler.h"
 #include "headers.h"
+#include "queue.h"
+#include "structs.h"
 
 int msgQID;
 d_list *p_table = NULL;
@@ -20,7 +22,7 @@ d_list *p_table = NULL;
  * return: 0 on success, -1 on failure
  */
 int main(int argc, char *argv[]) {
-  int key, gen_msgQID, response;
+  int key, gen_msgQID, response, quantem;
   scheduler_type schedulerType;
   d_list *processTable = NULL;
 
@@ -34,7 +36,7 @@ int main(int argc, char *argv[]) {
 
   initClk();
 
-  schedulerType = getScType(atoi(argv[1]));
+  schedulerType = getScParams(argv, &quantem);
   printf(ANSI_YELLOW "==>SCH: My Scheduler Type is %i\n" ANSI_RESET,
          (int)schedulerType);
 
@@ -46,7 +48,19 @@ int main(int argc, char *argv[]) {
 
   msgQID = gen_msgQID = initSchGenCom();
 
-  getProcesses(gen_msgQID, processTable);
+  switch (schedulerType) {
+  case HPF:
+    // HPFScheduling();
+    break;
+  case SRTN:
+    // SRTNScheduling();
+    break;
+  case RR:
+    RRScheduling(quantem, gen_msgQID, processTable);
+    break;
+  default:
+    exit(-1);
+  }
 
   // TODO Initialize Scheduler
   //  Create Ready queue & (Wait queue ??)
@@ -80,64 +94,96 @@ int main(int argc, char *argv[]) {
   //  Any other clean up
 }
 
+int RRScheduling(int quantem, int gen_msgQID, d_list *processTable) {
+  queue *readyQ;
+  int processesFlag = 1; // to know when to stop getting processes from gen
+  process_t process;
+  int currentTime = getClk();
+  int lastTime = currentTime;
+
+  readyQ = createQueue(free);
+  while (1) {
+    currentTime = getClk();
+    if (currentTime == lastTime)
+      continue;
+
+    if (processesFlag) {
+      if (getProcess(&processesFlag, gen_msgQID, &process)) {
+        createProcess(processTable, &process);
+
+        // TODO: change later
+        // change this later instead of preempting just stop
+        // because of the stats effect
+        preemptProcessByIndex(processTable, process.id - 1);
+
+        // FIXME: delete later just for testing
+        {
+          sleep(3);
+          preemptProcessByIndex(processTable, 0);
+          sleep(1);
+          resumeProcessByIndex(processTable, 0);
+          preemptProcessByIndex(processTable, 1);
+          sleep(1);
+          resumeProcessByIndex(processTable, 1);
+        }
+      }
+    }
+    lastTime = currentTime;
+  }
+}
+
+int SRTNScheduling();
+int HPFScheduling();
+
+/**
+ * getProcess - gets ap process from generator
+ *
+ * @gen_msgQID: msg queue with process generator
+ * @processTable: process table
+ *
+ * Return: 0 if no process, 1 if got the process
+ */
+int getProcess(int *processesFlag, int gen_msgQID, process_t *process) {
+  int response;
+
+  response = msgrcv(gen_msgQID, process, sizeof(process_t), 0, IPC_NOWAIT);
+
+  if (response == -1) {
+    if (errno == ENOMSG)
+      return 0;
+    perror("Error in receiving process from process generator");
+    exit(-1);
+  }
+
+  if (process->id == -1) {
+    printf(ANSI_YELLOW "==>SCH: Received All Processes\n" ANSI_RESET);
+    *processesFlag = 0;
+    return 0;
+  }
+  printf(ANSI_BLUE "==>SCH: Received process with id = %i\n" ANSI_RESET,
+         process->id);
+  return 1;
+}
+
 /**
  * getScType - gets scheduler type
  *
  * @schedulerType: scheduler type
  * return: scheduler type enum
  */
-scheduler_type getScType(int schedulerType) {
+scheduler_type getScParams(char *argv[], int *quantem) {
+  int schedulerType = atoi(argv[1]);
+
   switch (schedulerType) {
   case 0:
     return HPF;
   case 1:
     return SRTN;
   case 2:
+    *quantem = atoi(argv[2]);
     return RR;
   default:
     exit(-1);
-  }
-}
-
-/**
- * getProcesses - gets processes from generator
- *
- * @gen_msgQID: msg queue with process generator
- * @processTable: process table
- */
-void getProcesses(int gen_msgQID, d_list *processTable) {
-  int response;
-  process_t process;
-
-  while (1) {
-    response = msgrcv(gen_msgQID, &process, sizeof(process_t), 0, !IPC_NOWAIT);
-
-    if (response == -1) {
-      perror("Error in receiving process from process generator");
-      exit(-1);
-    }
-
-    if (process.id == -1) {
-      printf(ANSI_YELLOW "==>SCH: Received All Processes\n" ANSI_RESET);
-      break;
-    }
-    printf(ANSI_BLUE "==>SCH: Received process with id = %i\n" ANSI_RESET,
-           process.id);
-    createProcess(processTable, &process);
-    // TODO: change later
-    // change this later instead of preempting just stop
-    // because of the stats effect
-    preemptProcessByIndex(processTable, process.id - 1);
-  }
-  // FIXME: delete later just for testing
-  {
-    sleep(3);
-    preemptProcessByIndex(processTable, 0);
-    sleep(1);
-    resumeProcessByIndex(processTable, 0);
-    preemptProcessByIndex(processTable, 1);
-    sleep(1);
-    resumeProcessByIndex(processTable, 1);
   }
 }
 
