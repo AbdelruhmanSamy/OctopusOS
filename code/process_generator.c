@@ -252,7 +252,7 @@ void createSchedulerAndClock(pid_t *schedulerPid, pid_t *clockPid,
 
   if (*schedulerPid == 0) {
     char type[2];
-    char q[(int)(ceil(log10(quantum)) + 2) * sizeof(char)];
+    char q[5];
 
     sprintf(type, "%d", schedulerType);
     sprintf(q, "%d", quantum);
@@ -296,7 +296,7 @@ void sendProcessesToScheduler(queue *processes, int msgQID) {
                        "priority: %d to scheduler\n" ANSI_RESET,
            process->id, process->AT, process->BT, process->priority);
     // TODO: check this initial values later
-    process->RT = 0;
+    process->RT = process->BT;
     process->WT = 0;
     process->TA = 0;
     process->LST = currentTime;

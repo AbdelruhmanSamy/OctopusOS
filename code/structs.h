@@ -21,12 +21,12 @@ typedef struct process {
 
 typedef struct PCB {
   process_state state;
-  process_t process;
+  process_t *process;
 } PCB_t;
 
 typedef struct process_entry {
   int p_id;
-  PCB_t *PCB;
+  PCB_t PCB;
 } process_entry_t;
 
 typedef struct cleanup_data {
