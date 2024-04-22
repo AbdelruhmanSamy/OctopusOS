@@ -124,6 +124,7 @@ void getProcesses(int gen_msgQID, d_list *processTable) {
     printf(ANSI_BLUE "==>SCH: Received process with id = %i\n" ANSI_RESET,
            process.id);
     createProcess(processTable, &process);
+
   }
   // FIXME: delete later just for testing
   {
@@ -167,11 +168,17 @@ void createProcess(d_list *processTable, process_t *process) {
   }
 
   if (pid == 0) {
+    int semid = initSchProSem(getpid());
 
-    char *args[] = {"./process.out", NULL};
+    char str[10];
+    sprintf(str, "%d", semid);
+
+    char *args[] = {"./process.out", str , NULL}; 
     execvp(args[0], args);
     exit(0);
-  }
+  } 
+
+  int semid = initSchProSem(pid);
 
   processEntry = malloc(sizeof(*processEntry));
   if (!processEntry) {
@@ -185,12 +192,8 @@ void createProcess(d_list *processTable, process_t *process) {
     exit(-1);
   }
 
-
   
-  int semid = initSchProSem(pid);
-  initSchProShm(pid , pcb);
   
-
   // TODO: make any cleaning upon process termination
   // TODO: update cleaninig functions already existing in the scheduler to clear any ipcs
   // TODO: Delete the data of a process when it gets notifies that it finished. 
@@ -203,12 +206,22 @@ void createProcess(d_list *processTable, process_t *process) {
   processEntry->p_id = pid;
   processEntry->PCB = pcb;
 
+  sendPCBToProcess(pid, pcb);
+
   if (!insertNodeEnd(processTable, processEntry)) {
     perror("insertNodeEnd");
     exit(-1);
   }
 
   printf(ANSI_GREEN "==>SCH: Added process to processes table\n" ANSI_RESET);
+
+      // FIXME: delete later just for testing
+    
+    sleep(3);
+    UpdateProcessStatus(RUNNING , pid , pcb);
+    sleep(3);
+    UpdateProcessStatus(READY , pid ,pcb);
+  
 }
 
 /**
@@ -295,8 +308,8 @@ void initSchProShm(int pid , PCB_t* pcb)
     exit(-1);
   }
  
-  int shmAdd = shmat(shmid , &pcb->state , 0);
-  if(shmAdd != &pcb->state){
+  int* shmAdd = (int*)shmat(shmid , &pcb->state , 0);
+  if(*shmAdd != pcb->state){
     perror("address of shared memory is not the address of the state\n");
     exit(-1);
   }
@@ -311,8 +324,72 @@ int initSchProSem(int pid)
     perror("error in creating semaphor\n");
     exit(-1);
   }else if (DEBUG){
-    printf("Semaphor created sucessfully with pid = %d\n" , semid);
+    printf("Semaphor created sucessfully with id = %d\n" , semid);
+  }
+
+  union SemUn semun;
+  semun.val = 0;
+  
+  if(semctl(semid , 0 , SETVAL , semun) == -1){
+    perror("error in setting initial value for sem\n");
+    exit(-1);
   }
 
   return semid;
+}
+
+void UpdateProcessStatus(process_state s, int pid , PCB_t *pcb)
+{
+    //getting semid    
+    int id = ftok("keyfiles/PRO_SCH_SEM" , pid);
+    int semid = semget(pid , 1 ,IPC_CREAT | 0666);
+
+    if(semid == -1){
+      perror("error in semid");
+      exit(-1);
+    }else if(DEBUG){
+      printf("semid in UpdateProcessStatus = %d\n", semid);
+    }
+    
+
+    if(s == RUNNING)
+      up(semid);
+      
+    else if(pcb->state == RUNNING)
+      down(semid);
+
+    pcb->state = s;
+    // if(DEBUG)
+    //   printf("Current state is %s" , pcb->state);
+}
+
+void sendPCBToProcess(int pppid, PCB_t* pcb) {
+  int id = ftok("keyfiles/PRO_SCH_Q", pppid);
+  int q_id = msgget(id, IPC_CREAT | 0666);
+
+  if (q_id == -1) {
+    perror("Error in creating queue\n");
+    exit(-1);
+  } else if (DEBUG) {
+    printf("q_id = %d\n", q_id);
+  }
+
+  struct msgbuff msgbuffer;
+
+  // Copy PCB data into the message buffer
+  memcpy(&msgbuffer.pcb, &pcb, sizeof(PCB_t));
+  msgbuffer.mtype = pppid;
+
+  int res = msgsnd(q_id, &msgbuffer, sizeof(PCB_t*), !IPC_NOWAIT);
+  printf("Inside sendPCBToProcess, BT = %d\n", msgbuffer.pcb->process.BT);
+
+  if (res == -1) {
+    perror("Error in sending pcb\n");
+    exit(-1);
+  } else if (DEBUG) {
+    printf("PCB sent successfully\n");
+  }
+  fflush(stdout);
+
+  sleep(4);
 }

@@ -14,6 +14,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#include <string.h>
 
 //===============================
 // CONSTANTS
@@ -32,7 +33,6 @@
 #define ANSI_PURPLE "\x1b[35m"
 #define ANSI_RESET "\x1b[0m"
 
-#define short bool;
 #define true 1
 #define false 0
 
@@ -124,4 +124,34 @@ int initSchGenCom() {
   }
 
   return msgQID;
+}
+
+void up(int semid){
+  struct sembuf sembuff;
+  sembuff.sem_num = 0;
+  sembuff.sem_op = 1;
+  sembuff.sem_flg = !IPC_NOWAIT;
+
+  if(semop(semid, &sembuff ,1)==-1){
+    perror("Error in up operation");
+    exit(-1);
+  }
+  else if (DEBUG){
+    printf("up operation performed sucessfully with semid = %d\n" , semid);
+  }
+}
+
+void down(int semid){
+  struct sembuf sembuff;
+  sembuff.sem_num =0;
+  sembuff.sem_op = -1;
+  sembuff.sem_flg = !IPC_NOWAIT;
+
+  if(semop(semid , &sembuff , 1) == -1){
+    perror("Error in down operation");
+    exit(-1);
+  }
+  else if (DEBUG){
+    printf("Down operation performed sucessfully of semid = %d\n" , semid);
+  }
 }

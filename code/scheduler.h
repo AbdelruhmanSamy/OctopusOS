@@ -33,3 +33,8 @@ void initSchProShm(int pid , PCB_t* pcb);
 // TODO: make semaphors to acess the shmd correctly
 int initSchProSem(int pid);
 
+// TODO: update state of the process using shared mem
+void UpdateProcessStatus(process_state s ,int pid , PCB_t *pcb);
+
+
+void sendPCBToProcess(int pid , PCB_t* pcb);
