@@ -155,3 +155,20 @@ void down(int semid){
     printf("Down operation performed sucessfully of semid = %d\n" , semid);
   }
 }
+
+int initSchProShm(int pid )
+{
+  int id2 = ftok("keyfiles/PRO_SCH_SHM" , pid);
+  int shmid = shmget(id2 , sizeof(int) ,IPC_CREAT | 0666);
+ 
+  if(shmid == -1){
+    perror("error in creating shared memory\n");
+    exit(-1);
+  }
+  else if (DEBUG){
+    printf("shmadd created sucessfully\n");
+  }
+  fflush(stdout);
+
+  return shmid;
+} 
