@@ -10,7 +10,13 @@ typedef struct process {
   int AT;       // arrival time
   int BT;       // burst time
   int priority; // priority
-  // TODO: add more attributes here when needed
+  int ST;       // start time
+  int FT;       // finish time
+  int WT;       // waiting time
+  int LST;      // Last Stop time (last time the process was stopped)
+                //   used to calculate the waiting time
+  int RT;       // remaining time
+  int TA;       // turnaround time
 } process_t;
 
 typedef struct PCB {
