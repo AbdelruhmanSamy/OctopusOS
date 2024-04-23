@@ -3,20 +3,19 @@
 
 /**
  * @comp: pass a function to be used to compare between any two heap elements
-  return: 
+  return:
   -  1: element1 > element2
   - -1: element1 < element1
-  -  0: element1 = element2 
+  -  0: element1 = element2
 */
-min_heap* createMinHeap(int (*comp)(void *, void *))
-{
-    min_heap* newHeap = malloc(sizeof(*newHeap));
-    newHeap->arr = malloc(sizeof(void*));           
-    newHeap->capacity = 1;
-    newHeap->size = 0;  
-    newHeap->compare = comp;
+min_heap *createMinHeap(int (*comp)(void *, void *)) {
+  min_heap *newHeap = malloc(sizeof(*newHeap));
+  newHeap->arr = malloc(sizeof(void *));
+  newHeap->capacity = 1;
+  newHeap->size = 0;
+  newHeap->compare = comp;
 
-    return newHeap;
+  return newHeap;
 }
 
 /**
@@ -77,41 +76,45 @@ void decreaseKey(min_heap* heap ,int ind){
         parentInd = (ind-1)/2;
     }
 
-}          
+  void **arr = heap->arr;
+  int parentInd = (ind - 1) / 2;
 
+  while (parentInd >= 0 && heap->compare(arr[parentInd], arr[ind]) > 0) {
+    swap(arr, ind, parentInd);
+    ind = parentInd;
+    parentInd = (ind - 1) / 2;
+  }
+}
 
 /**
  * Shift-down operation, used locally
-*/
-void minHeapify(min_heap * heap, int ind)
-{
-        int chInd = 2*ind+1 , minInd = ind;
-        
-        bool flag = true;
-        void** arr = heap->arr;
+ */
+void minHeapify(min_heap *heap, int ind) {
+  int chInd = 2 * ind + 1, minInd = ind;
 
-        while(flag && chInd < heap->size){            
-            if(heap->compare(arr[ind] , arr[chInd]) > 0)
-                minInd = chInd;
+  bool flag = true;
+  void **arr = heap->arr;
 
-            
-            if(chInd+1 < heap->size && heap->compare(arr[minInd] , arr[chInd+1])>0)
-                minInd = chInd+1;
+  while (flag && chInd < heap->size) {
+    if (heap->compare(arr[ind], arr[chInd]) > 0)
+      minInd = chInd;
 
-            if(minInd == ind)
-                flag = false;
-            else{
-                swap(arr , ind , minInd);
-                ind = minInd;
-                chInd = 2*ind+1;
-            }    
-        }
+    if (chInd + 1 < heap->size &&
+        heap->compare(arr[minInd], arr[chInd + 1]) > 0)
+      minInd = chInd + 1;
 
+    if (minInd == ind)
+      flag = false;
+    else {
+      swap(arr, ind, minInd);
+      ind = minInd;
+      chInd = 2 * ind + 1;
+    }
+  }
 }
 
-
 /**
- * Description: doubles the size of the array if the max capacity is reached. 
+ * Description: doubles the size of the array if the max capacity is reached.
  * used in insert function
 
  * - initializing new heap by double capacity
@@ -138,18 +141,17 @@ min_heap** doubleCapacity(min_heap *heap)
     return returnval;
 }
 
-void swap(void ** arr, int ind1, int ind2)
-{
-    void* temp = arr[ind1];
-    arr[ind1] = arr[ind2];
-    arr[ind2] = temp;
-    return;
+void swap(void **arr, int ind1, int ind2) {
+  void *temp = arr[ind1];
+  arr[ind1] = arr[ind2];
+  arr[ind2] = temp;
+  return;
 }
 
-void printHeap(min_heap* heap){
-    printf("\n=============================\n");
-    printf("capacity: %d \nsize: %d\narr:",heap->capacity , heap->size);
-    for(int i =0 ; i< heap->capacity ; i++)
-        printf("%d ", heap->arr[i]);
-    printf("\n=============================\n\n");
+void printHeap(min_heap *heap) {
+  printf("\n=============================\n");
+  printf("capacity: %d \nsize: %d\narr:", (int)heap->capacity, (int)heap->size);
+  for (int i = 0; i < heap->capacity; i++)
+    printf("%d ", *(int *)heap->arr[i]);
+  printf("\n=============================\n\n");
 }

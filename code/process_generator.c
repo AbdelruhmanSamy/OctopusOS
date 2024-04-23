@@ -9,6 +9,7 @@
 
 #include "process_generator.h"
 #include "headers.h"
+#include <math.h>
 
 /**
  * main - The main function of the process generator.
@@ -20,7 +21,7 @@
 int main(int argc, char *argv[]) {
   queue *processes;
   scheduler_type schedulerType;
-  int quantum;
+  int quantum = 0;
   pid_t schedulerPid, clockPid;
   int msgQID;
 
@@ -38,7 +39,8 @@ int main(int argc, char *argv[]) {
 
   getInput(&schedulerType, &quantum);
 
-  createSchedulerAndClock(&schedulerPid, &clockPid, (int)schedulerType);
+  createSchedulerAndClock(&schedulerPid, &clockPid, (int)schedulerType,
+                          quantum);
 
   initClk();
   msgQID = initSchGenCom();
@@ -226,7 +228,7 @@ void printBanner() {
  * @clockPid: a pointer to the clock process id
  */
 void createSchedulerAndClock(pid_t *schedulerPid, pid_t *clockPid,
-                             int schedulerType) {
+                             int schedulerType, int quantum) {
 
   *clockPid = fork();
 
@@ -249,23 +251,13 @@ void createSchedulerAndClock(pid_t *schedulerPid, pid_t *clockPid,
   }
 
   if (*schedulerPid == 0) {
-    char *type;
+    char type[2];
+    char q[5];
 
-    switch (schedulerType) {
-    case 0:
-      type = "0";
-      break;
-    case 1:
-      type = "1";
-      break;
-    case 2:
-      type = "2";
-      break;
-    default:
-      exit(-1);
-    }
+    sprintf(type, "%d", schedulerType);
+    sprintf(q, "%d", quantum);
 
-    char *args[] = {"./scheduler.out", type, NULL};
+    char *args[] = {"./scheduler.out", type, q, NULL};
     execvp(args[0], args);
     exit(0);
   }
@@ -303,8 +295,8 @@ void sendProcessesToScheduler(queue *processes, int msgQID) {
     printf(ANSI_PURPLE "=>GEN:Sending process with id: %d, AT: %d, BT: %d, "
                        "priority: %d to scheduler\n" ANSI_RESET,
            process->id, process->AT, process->BT, process->priority);
-    // TODO: check this intial values later
-    process->RT = 0;
+    // TODO: check this initial values later
+    process->RT = process->BT;
     process->WT = 0;
     process->TA = 0;
     process->LST = currentTime;
