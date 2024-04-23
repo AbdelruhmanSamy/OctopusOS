@@ -1,7 +1,7 @@
 #pragma once
-
+#include "structs.h"
+// #include "headers.h"
 #include <stdlib.h>
-#include <stdbool.h>
 
 /**
  * @list: array of data

@@ -1,5 +1,5 @@
 #include "minHeap.h"
-#include <stdio.h>
+#include "headers.h"
 
 /**
  * @comp: pass a function to be used to compare between any two heap elements
@@ -25,15 +25,20 @@ min_heap* createMinHeap(int (*comp)(void *, void *))
 */
 void insertMinHeap(min_heap** heap, void * element)
 {
-    printf("entered insertion safely\n");
-    printHeap((*heap));
-    
+    if(DEBUG){
+        printf("entered insertion safely\n");
+        printHeap((*heap));
+    }
+
     if((*heap)->size == (*heap)->capacity)
         (*heap) = *doubleCapacity((*heap));
     
     (*heap)->arr[(*heap)->size] = element;
     (*heap)->size++;
-    printf("arr[%ld]: %d\n" , (*heap)->size-1 , (int*)(*heap)->arr[(*heap)->size-1]);
+    
+    if(DEBUG)
+        printf("arr[%ld]: %d\n" , (*heap)->size-1 , (int*)(*heap)->arr[(*heap)->size-1]);
+    
     decreaseKey((*heap) , (*heap)->size-1);
 }
 
@@ -42,8 +47,10 @@ void insertMinHeap(min_heap** heap, void * element)
 */
 void * extractMin(min_heap * heap)
 {
-    printf("entered extraction!!\n");
-    printHeap(heap);
+    if(DEBUG){
+        printf("entered extraction!!\n");    
+        printHeap(heap);
+    }
 
     void* minElement = heap->arr[0];
     heap->size--;
@@ -64,7 +71,7 @@ void decreaseKey(min_heap* heap ,int ind){
     void** arr = heap->arr;
     int parentInd = (ind-1)/2;
 
-    while(parentInd >= 0 && arr[parentInd] > arr[ind]){
+    while(parentInd >= 0 && heap->compare(arr[parentInd] , arr[ind]) > 0){
         swap(arr , ind , parentInd);
         ind = parentInd;
         parentInd = (ind-1)/2;
@@ -121,9 +128,13 @@ min_heap** doubleCapacity(min_heap *heap)
     for(int i = 0 ; i<heap->size ; i++)
         newHeap->arr[i] = heap->arr[i];
 
-    printf("doubling occured!!\n");
     min_heap** returnval = &newHeap;
-    printHeap(*returnval);
+    
+    if(DEBUG){
+        printf("doubling occured!!\n");
+        printHeap(*returnval);
+    }
+    
     return returnval;
 }
 
