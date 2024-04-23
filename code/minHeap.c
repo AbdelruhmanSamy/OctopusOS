@@ -1,6 +1,6 @@
 #include "minHeap.h"
-#include "headers.h"
-
+#include <stdbool.h>
+#include <stdio.h>
 /**
  * @comp: pass a function to be used to compare between any two heap elements
   return:
@@ -24,20 +24,19 @@ min_heap *createMinHeap(int (*comp)(void *, void *)) {
 */
 void insertMinHeap(min_heap** heap, void * element)
 {
-    if(DEBUG){
+    // if(DEBUG){
         printf("entered insertion safely\n");
         printHeap((*heap));
-    }
+    // }
 
     if((*heap)->size == (*heap)->capacity)
         (*heap) = *doubleCapacity((*heap));
     
+
     (*heap)->arr[(*heap)->size] = element;
     (*heap)->size++;
     
-    if(DEBUG)
-        printf("arr[%ld]: %d\n" , (*heap)->size-1 , (int*)(*heap)->arr[(*heap)->size-1]);
-    
+        
     decreaseKey((*heap) , (*heap)->size-1);
 }
 
@@ -46,10 +45,10 @@ void insertMinHeap(min_heap** heap, void * element)
 */
 void * extractMin(min_heap * heap)
 {
-    if(DEBUG){
+    // if(DEBUG){
         printf("entered extraction!!\n");    
         printHeap(heap);
-    }
+    // }
 
     void* minElement = heap->arr[0];
     heap->size--;
@@ -75,15 +74,6 @@ void decreaseKey(min_heap* heap ,int ind){
         ind = parentInd;
         parentInd = (ind-1)/2;
     }
-
-  void **arr = heap->arr;
-  int parentInd = (ind - 1) / 2;
-
-  while (parentInd >= 0 && heap->compare(arr[parentInd], arr[ind]) > 0) {
-    swap(arr, ind, parentInd);
-    ind = parentInd;
-    parentInd = (ind - 1) / 2;
-  }
 }
 
 /**
@@ -133,10 +123,10 @@ min_heap** doubleCapacity(min_heap *heap)
 
     min_heap** returnval = &newHeap;
     
-    if(DEBUG){
+    // if(DEBUG){
         printf("doubling occured!!\n");
         printHeap(*returnval);
-    }
+    // }
     
     return returnval;
 }
@@ -149,9 +139,7 @@ void swap(void **arr, int ind1, int ind2) {
 }
 
 void printHeap(min_heap *heap) {
-  printf("\n=============================\n");
-  printf("capacity: %d \nsize: %d\narr:", (int)heap->capacity, (int)heap->size);
-  for (int i = 0; i < heap->capacity; i++)
-    printf("%d ", *(int *)heap->arr[i]);
-  printf("\n=============================\n\n");
+  printf("=============================\n");
+  printf("capacity: %d \nsize: %d\n", (int)heap->capacity, (int)heap->size);
+  printf("=============================\n");
 }

@@ -184,8 +184,13 @@ int SRTNScheduling(void *readyQueue, process_t *process, int *rQuantem) {
   process_t *currentProcess;
 
   if (process) {
-    insertMinHeap(&readyQ, process);
-    currentProcess = (process_t *)getMin(readyQ);
+    insertMinHeap(&readyQ, (void*)process);
+    currentProcess = (process_t *)extractMin(readyQ);
+   
+   if(DEBUG)
+      printf("inside SRTN, RT = %d\n" , *(currentProcess->RT));
+    fflush(stdout);  
+
     if (process == currentProcess)
       contextSwitch();
   }
@@ -313,8 +318,8 @@ process_t *createProcess(d_list *processTable, process_t *process) {
   int shmid = initSchProShm(pid);
   int* shmAdd = (int*)shmat(shmid , (void*)0 , 0);
   
-  pcb->process.RT = shmAdd;
-  *pcb->process.RT = process->BT;
+  processEntry->PCB.process->RT = shmAdd;
+  *processEntry->PCB.process->RT = process->BT;
   
   if (pid == -1) {
     perror("fork");

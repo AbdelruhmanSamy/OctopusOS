@@ -296,7 +296,7 @@ void sendProcessesToScheduler(queue *processes, int msgQID) {
                        "priority: %d to scheduler\n" ANSI_RESET,
            process->id, process->AT, process->BT, process->priority);
     // TODO: check this initial values later
-    process->RT = process->BT;
+    //process->RT = process->BT;    //this is set inside the scheduler (shmAdd)
     process->WT = 0;
     process->TA = 0;
     process->LST = currentTime;
