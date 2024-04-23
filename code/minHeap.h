@@ -1,6 +1,5 @@
 #pragma once
-
-#include <stdbool.h>
+#include "structs.h"
 #include <stdlib.h>
 
 /**

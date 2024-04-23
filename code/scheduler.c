@@ -26,7 +26,7 @@ int main(int argc, char *argv[]) {
 
   signal(SIGINT, clearSchResources);
   signal(SIGTERM, clearSchResources);
-
+  signal(SIGUSR1 , sigUsr1Handler);
   if (atexit(cleanUpScheduler) != 0) {
     perror("atexit");
     exit(1);
@@ -291,19 +291,6 @@ process_t *createProcess(d_list *processTable, process_t *process) {
   process_entry_t *processEntry;
   process_t *pcbProcess;
 
-  pid = fork();
-
-  if (pid == -1) {
-    perror("fork");
-    exit(-1);
-  }
-
-  if (pid == 0) {
-    char *args[] = {"./process.out", NULL};
-    execvp(args[0], args);
-    exit(0);
-  }
-
   processEntry = malloc(sizeof(*processEntry));
   if (!processEntry) {
     perror("malloc");
@@ -320,6 +307,26 @@ process_t *createProcess(d_list *processTable, process_t *process) {
   processEntry->p_id = pid;
   processEntry->PCB.state = READY;
   processEntry->PCB.process = pcbProcess;
+  
+  pid = fork();
+
+  int shmid = initSchProShm(pid);
+  int* shmAdd = (int*)shmat(shmid , (void*)0 , 0);
+  
+  pcb->process.RT = shmAdd;
+  *pcb->process.RT = process->BT;
+  
+  if (pid == -1) {
+    perror("fork");
+    exit(-1);
+  }
+
+  if (pid == 0) {
+    char *args[] = {"./process.out" , NULL}; 
+    execvp(args[0], args);
+    exit(0);
+  } 
+
   if (!insertNodeEnd(processTable, processEntry)) {
     perror("insertNodeEnd");
     exit(-1);
@@ -403,4 +410,27 @@ void cleanUpScheduler() {
 void clearSchResources(int signum) {
   cleanUpScheduler();
   exit(0);
+}
+
+int initSchProQ()
+{
+  int id = ftok("keyfiles/PRO_SCH_Q" , SCH_PRO_COM);
+  int q_id=msgget(id , IPC_CREAT | 0666);
+
+  if(q_id == -1){
+    perror("error in creating msg queue between process & scheduler");
+    exit(-1);
+  }else if(DEBUG){
+    printf("Message queue created sucessfully with pid = %d\n" , q_id);
+  } 
+
+  return q_id;
+}
+
+void sigUsr1Handler(int signum)
+{
+  //TODO: write an appropriate implementation for this function
+    //detach the scheduler from the sharedmemory of the rem. time
+    //of this process (the running one)
+  raise(SIGKILL);
 }

@@ -33,4 +33,11 @@ void contextSwitch();
 // with pid
 void preemptProcessByIndex(d_list *processTable, unsigned int index);
 void resumeProcessByIndex(d_list *processTable, unsigned int index);
-// TODO: make 2 functions for start and termination
+
+//===============================
+// IPC Functions
+//===============================
+// TODO: create a queue between scheduler and all processes to be able to signal 
+// it's termination
+int initSchProQ();
+void sigUsr1Handler(int signum);
