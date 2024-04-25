@@ -1,0 +1,39 @@
+# I wrote this to help me remember where am I and what needs to get done
+
+From Scheduler's responsibilties   
+Report  :  
+1. CPU utilization  
+2. Avg weighted turnaround time 
+3. Avg waiting time  
+4. Standard deviation for avd wieghted TRT  
+
+Generate :  
+1. Scheduler.log
+2. Scheduler.perf
+
+Steps:
+1. turnaround time (TRT) = finish time - arrival time
+2. weighted turnaround time (WTA) = TRT / burst_time
+3. avg WTA = Sum(WTA) / N
+4. avg waiting = Sum(waiting) / N
+
+then to calc Standard deviation of WTA:
+A. calc SS = SUM((WTA - avgWTA)^2)
+B. stdDev = sqrt (SS / N)
+
+--- Scheduler.log
+# at time {t} process {p} {state} arr {AT} total {burst time} remain {BT - runtime} wait {WT}
+---
+
+--- Scheduler.perf (from doc)
+CPU utilization = (Total time on non idle tasks) / total time
+Avg WTA = 
+Avg waiting = 
+Std WTA = 
+---
+
+NOTES: 
+
+Numbers: approx to 2 decimal places
+States: started, resumed, stopped, finished
+TA & WTA written only at finished state
