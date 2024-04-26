@@ -42,8 +42,8 @@ void insertMinHeap(min_heap **heap, void *element) {
  */
 void *extractMin(min_heap *heap) {
   // if(DEBUG){
-  printf("entered extraction!!\n");
-  printHeap(heap);
+  // printf("entered extraction!!\n");
+  // printHeap(heap);
   // }
 
   void *minElement = heap->arr[0];
@@ -53,6 +53,15 @@ void *extractMin(min_heap *heap) {
   minHeapify(heap, 0);
 
   return minElement;
+}
+
+/**
+ * get the min element in the heap
+ */
+void *getMin(min_heap *heap) {
+  if (!heap || heap->size <= 0)
+    return NULL;
+  return heap->arr[0];
 }
 
 /**
@@ -119,7 +128,7 @@ min_heap **doubleCapacity(min_heap *heap) {
   min_heap **returnval = &newHeap;
 
   // if(DEBUG){
-  // printf("doubling occured!!\n");
+  // printf("doubling occurred!!\n");
   // printHeap(*returnval);
   // }
 

@@ -52,11 +52,15 @@ void push(queue *q, void *item) {
  * remove the first element from the queue
  * @q: pointer to queue
  */
-void pop(queue *q) {
-  if (empty(q))
-    return;
+void *pop(queue *q) {
+  d_node *n;
 
+  if (empty(q))
+    return NULL;
+
+  n = getNode(q->list, 0);
   deleteNodeStart(q->list);
+  return n->data;
 }
 
 /**

@@ -1,4 +1,5 @@
 #include "minHeap.h"
+#include <stdio.h>
 
 int compare(void* a , void* b){
 
