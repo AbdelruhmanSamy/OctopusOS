@@ -37,7 +37,7 @@ int main(int argc, char *argv[]) {
 
   schedulerType = getScParams(argv, &quantem);
   if (DEBUG)
-    printf(ANSI_YELLOW "==>SCH: My Scheduler Type is %i\n" ANSI_RESET,
+    printf(ANSI_BLUE "==>SCH: My Scheduler Type is %i\n" ANSI_RESET,
            (int)schedulerType);
 
   p_table = processTable = createList(freeProcessEntry);
@@ -244,7 +244,7 @@ int getProcess(int *processesFlag, int gen_msgQID, process_t *process) {
   }
 
   if (process->id == -1) {
-    printf(ANSI_YELLOW "==>SCH: Received All Processes\n" ANSI_RESET);
+    printf(ANSI_BLUE "==>SCH: Received All Processes\n" ANSI_RESET);
     *processesFlag = 0;
     return 0;
   }
@@ -339,7 +339,7 @@ process_t *createProcess(d_list *processTable, process_t *process) {
     exit(-1);
   }
 
-  printf(ANSI_GREEN "==>SCH: Added process to processes table\n" ANSI_RESET);
+  printf(ANSI_BLUE "==>SCH: Added process to processes table\n" ANSI_RESET);
   return pcbProcess;
 }
 
@@ -367,9 +367,8 @@ void preemptProcessByIndex(d_list *processTable, unsigned int index) {
   process_entry_t *processEntry = getNode(processTable, index)->data;
   PCB_t *pcb = &processEntry->PCB;
 
-  if (DEBUG)
-    printf(ANSI_GREY "==>SCH: Preempting process with id = %i\n" ANSI_RESET,
-           processEntry->p_id);
+  printf(ANSI_GREY "==>SCH: Preempting process with id = %i\n" ANSI_RESET,
+         processEntry->p_id);
 
   if (pcb->state == RUNNING) {
     kill(processEntry->p_id, SIGSTOP);
@@ -387,9 +386,8 @@ void resumeProcessByIndex(d_list *processTable, unsigned int index) {
   process_entry_t *processEntry = getNode(processTable, index)->data;
   PCB_t *pcb = &processEntry->PCB;
 
-  if (DEBUG)
-    printf(ANSI_GREEN "==>SCH: Resuming process with id = %i\n" ANSI_RESET,
-           processEntry->p_id);
+  printf(ANSI_BLUE "==>SCH: Resuming process with id = %i\n" ANSI_RESET,
+         processEntry->p_id);
 
   if (pcb->state == READY) {
     kill(processEntry->p_id, SIGCONT);
