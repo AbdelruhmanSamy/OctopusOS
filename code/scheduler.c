@@ -329,6 +329,7 @@ process_t *createProcess(d_list *processTable, process_t *process) {
   if (pid == 0) {
     char *args[] = {"./process.out" , NULL}; 
     execvp(args[0], args);
+    kill(getpid(), SIGSTOP);
     exit(0);
   } 
 

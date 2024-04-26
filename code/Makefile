@@ -1,5 +1,7 @@
 .PHONY: build all clean test
 
+all: build run
+
 build:
 	gcc list.c queue.c process_generator.c -o process_generator.out -lm
 	gcc clk.c -o clk.out
@@ -10,7 +12,6 @@ build:
 clean:
 	rm -f *.out  processes.txt
 
-all: clean build
-
 run:
 	./process_generator.out
+

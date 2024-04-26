@@ -9,7 +9,9 @@ void sigTermHandler(int signum) {
   if (shmdt(shmAdd) == -1) {
     perror("Error in detach\n");
   } else if (DEBUG) {
-    printf("process %d detached from memory sucessfully\n", getpid());
+    printf(ANSI_GREEN
+           "process %d detached from memory sucessfully\n" ANSI_RESET,
+           getpid());
   }
 
   if (shmctl(shmid, IPC_RMID, (struct shmid_ds *)0) == -1) {
