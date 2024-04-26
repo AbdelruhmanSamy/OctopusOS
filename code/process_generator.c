@@ -10,6 +10,7 @@
 #include "process_generator.h"
 #include "headers.h"
 #include <math.h>
+#include <string.h>
 
 /**
  * main - The main function of the process generator.
@@ -163,13 +164,30 @@ void getInput(scheduler_type *schedulerType, int *quantum) {
     }
   }
 
+  char *schedulerTypeStr;
+
+  switch (*schedulerType) {
+  case HPF:
+    schedulerTypeStr = "HPF";
+    break;
+  case SRTN:
+    schedulerTypeStr = "SRTN";
+    break;
+  case RR:
+    schedulerTypeStr = "RR";
+    break;
+  default:
+    schedulerTypeStr = "Unknown";
+    break;
+  }
+
   printf(ANSI_GREEN "============================\n" ANSI_RESET);
   printf(ANSI_GREEN "||       PARAMETERS       ||\n" ANSI_RESET);
   printf(ANSI_GREEN "============================\n" ANSI_RESET);
-  printf(ANSI_GREEN "|| Scheduler type |  %d    ||\n" ANSI_RESET,
-         *schedulerType);
+  printf(ANSI_GREEN "|| Scheduler type | %4s  ||\n" ANSI_RESET,
+         schedulerTypeStr);
   if (*schedulerType == RR) {
-    printf(ANSI_GREEN "|| Quantum:       |  %d    ||\n" ANSI_RESET, *quantum);
+    printf(ANSI_GREEN "|| Quantum:       |   %d   ||\n" ANSI_RESET, *quantum);
   }
   printf(ANSI_GREEN "============================\n" ANSI_RESET);
 }
@@ -296,7 +314,7 @@ void sendProcessesToScheduler(queue *processes, int msgQID) {
                        "priority: %d to scheduler\n" ANSI_RESET,
            process->id, process->AT, process->BT, process->priority);
     // TODO: check this initial values later
-    //process->RT = process->BT;    //this is set inside the scheduler (shmAdd)
+    // process->RT = process->BT;    //this is set inside the scheduler (shmAdd)
     process->WT = 0;
     process->TA = 0;
     process->LST = currentTime;
