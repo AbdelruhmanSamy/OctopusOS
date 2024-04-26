@@ -118,8 +118,9 @@ void schedule(scheduler_type schType, int quantem, int gen_msgQID,
       algorithm(readyQ, newProcess, &rQuantem);
       if (rQuantem <= 0)
         rQuantem = quantem;
-    } else
-      break; // TODO Change it later
+    } else if (empty(readyQ) && processTable->size == 0)
+      break;
+
     lastTime = currentTime;
   }
 }
