@@ -54,8 +54,7 @@ int main(int argc, char *argv[]) {
     exit(1);
   }
   // TODO: make wait correctly for the scheduler instead of busy waiting forever
-  while (1)
-    ;
+
   destroyClk(true);
 }
 

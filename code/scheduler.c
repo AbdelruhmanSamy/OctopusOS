@@ -332,8 +332,9 @@ process_t *createProcess(d_list *processTable, process_t *process) {
 
   if (pid == 0) {
     char *args[] = {"./process.out", NULL};
-    execvp(args[0], args);
+    // NOTE: If you want to autostart the process, uncomment the next line
     kill(getpid(), SIGSTOP);
+    execvp(args[0], args);
     exit(0);
   }
 
