@@ -311,12 +311,12 @@ process_t *createProcess(d_list *processTable, process_t *process) {
   }
 
   *pcbProcess = *process;
-  processEntry->p_id = pid;
   processEntry->PCB.state = READY;
   processEntry->PCB.process = pcbProcess;
 
   pid = fork();
 
+  processEntry->p_id = pid;
   int shmid = initSchProShm(pid);
   int *shmAdd = (int *)shmat(shmid, (void *)0, 0);
 
