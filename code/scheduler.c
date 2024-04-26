@@ -8,6 +8,7 @@
 
 #include "scheduler.h"
 #include "headers.h"
+#include <unistd.h>
 
 int msgQID;
 d_list *p_table = NULL;
@@ -26,7 +27,7 @@ int main(int argc, char *argv[]) {
 
   signal(SIGINT, clearSchResources);
   signal(SIGTERM, clearSchResources);
-  signal(SIGUSR1 , sigUsr1Handler);
+  signal(SIGUSR1, sigUsr1Handler);
   if (atexit(cleanUpScheduler) != 0) {
     perror("atexit");
     exit(1);
@@ -184,12 +185,12 @@ int SRTNScheduling(void *readyQueue, process_t *process, int *rQuantem) {
   process_t *currentProcess;
 
   if (process) {
-    insertMinHeap(&readyQ, (void*)process);
+    insertMinHeap(&readyQ, (void *)process);
     currentProcess = (process_t *)extractMin(readyQ);
-   
-   if(DEBUG)
-      printf("inside SRTN, RT = %d\n" , *(currentProcess->RT));
-    fflush(stdout);  
+
+    if (DEBUG)
+      printf("inside SRTN, RT = %d\n", *(currentProcess->RT));
+    fflush(stdout);
 
     if (process == currentProcess)
       contextSwitch();
@@ -312,26 +313,26 @@ process_t *createProcess(d_list *processTable, process_t *process) {
   processEntry->p_id = pid;
   processEntry->PCB.state = READY;
   processEntry->PCB.process = pcbProcess;
-  
+
   pid = fork();
 
   int shmid = initSchProShm(pid);
-  int* shmAdd = (int*)shmat(shmid , (void*)0 , 0);
-  
+  int *shmAdd = (int *)shmat(shmid, (void *)0, 0);
+
   processEntry->PCB.process->RT = shmAdd;
   *processEntry->PCB.process->RT = process->BT;
-  
+
   if (pid == -1) {
     perror("fork");
     exit(-1);
   }
 
   if (pid == 0) {
-    char *args[] = {"./process.out" , NULL}; 
+    char *args[] = {"./process.out", NULL};
     execvp(args[0], args);
     kill(getpid(), SIGSTOP);
     exit(0);
-  } 
+  }
 
   if (!insertNodeEnd(processTable, processEntry)) {
     perror("insertNodeEnd");
@@ -418,25 +419,25 @@ void clearSchResources(int signum) {
   exit(0);
 }
 
-int initSchProQ()
-{
-  int id = ftok("keyfiles/PRO_SCH_Q" , SCH_PRO_COM);
-  int q_id=msgget(id , IPC_CREAT | 0666);
+int initSchProQ() {
+  int id = ftok("keyfiles/PRO_SCH_Q", SCH_PRO_COM);
+  int q_id = msgget(id, IPC_CREAT | 0666);
 
-  if(q_id == -1){
+  if (q_id == -1) {
     perror("error in creating msg queue between process & scheduler");
     exit(-1);
-  }else if(DEBUG){
-    printf("Message queue created sucessfully with pid = %d\n" , q_id);
-  } 
+  } else if (DEBUG) {
+    printf("Message queue created sucessfully with pid = %d\n", q_id);
+  }
 
   return q_id;
 }
 
-void sigUsr1Handler(int signum)
-{
-  //TODO: write an appropriate implementation for this function
-    //detach the scheduler from the sharedmemory of the rem. time
-    //of this process (the running one)
-  raise(SIGKILL);
+void sigUsr1Handler(int signum) {
+  // TODO: write an appropriate implementation for this function
+  // detach the scheduler from the sharedmemory of the rem. time
+  // of this process (the running one)
+  // FIXME: Just tell me why you kill the sch here I spent 1 hour debuging for
+  // this
+  // raise(SIGKILL);
 }
