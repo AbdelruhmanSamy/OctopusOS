@@ -118,11 +118,12 @@ void schedule(scheduler_type schType, int quantem, int gen_msgQID,
       algorithm(readyQ, newProcess, &rQuantem);
       if (rQuantem <= 0)
         rQuantem = quantem;
-    } else if (empty(readyQ) && processTable->size == 0)
+    } else if (processTable->size == 0)
       break;
 
     lastTime = currentTime;
   }
+  printf(ANSI_BLUE "==>SCH: All processes are done\n" ANSI_RESET);
 }
 
 /**
@@ -317,6 +318,7 @@ process_t *createProcess(d_list *processTable, process_t *process) {
   pid = fork();
 
   processEntry->p_id = pid;
+
   int shmid = initSchProShm(pid);
   int *shmAdd = (int *)shmat(shmid, (void *)0, 0);
 
@@ -439,4 +441,20 @@ void sigUsr1Handler(int signum) {
   // FIXME: Just tell me why you kill the sch here I spent 1 hour debuging for
   // this
   // raise(SIGKILL);
+
+  pid_t killedProcess;
+  int status;
+  killedProcess = wait(&status);
+  printf(ANSI_GREY "==>SCH: Process %d terminated\n" ANSI_RESET, killedProcess);
+
+  for (int i = 0; i < p_table->size; i++) {
+    process_entry_t *processEntry = getNode(p_table, i)->data;
+    if (processEntry->p_id == killedProcess) {
+      deleteNode(p_table, i);
+      break;
+    }
+  }
+
+  printf(ANSI_GREY "==>SCH: number of processes = %d\n" ANSI_RESET,
+         (int)p_table->size);
 }
