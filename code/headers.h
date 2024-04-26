@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include <stdio.h> //if you don't use scanf/printf change this include
 #include <stdlib.h>
+#include <string.h>
 #include <sys/file.h>
 #include <sys/ipc.h>
 #include <sys/msg.h>
@@ -14,7 +15,6 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
-#include <string.h>
 
 //===============================
 // CONSTANTS
@@ -37,14 +37,14 @@
 #define false 0
 
 #define SCH_GEN_COM 5
-#define SCH_PRO_COM 6 
+#define SCH_PRO_COM 6
 
 #define SHKEY 300
 
 //===============================
 // ARGUMENTS
 //===============================
-const int DEBUG = true;  // set to true to enable debug prints
+const int DEBUG = false; // set to true to enable debug prints
 const int DELAY = false; // set to true to add delay
 
 ///==============================
@@ -126,49 +126,45 @@ int initSchGenCom() {
   return msgQID;
 }
 
-void up(int semid){
+void up(int semid) {
   struct sembuf sembuff;
   sembuff.sem_num = 0;
   sembuff.sem_op = 1;
   sembuff.sem_flg = !IPC_NOWAIT;
 
-  if(semop(semid, &sembuff ,1)==-1){
+  if (semop(semid, &sembuff, 1) == -1) {
     perror("Error in up operation");
     exit(-1);
-  }
-  else if (DEBUG){
-    printf("up operation performed sucessfully with semid = %d\n" , semid);
+  } else if (DEBUG) {
+    printf("up operation performed sucessfully with semid = %d\n", semid);
   }
 }
 
-void down(int semid){
+void down(int semid) {
   struct sembuf sembuff;
-  sembuff.sem_num =0;
+  sembuff.sem_num = 0;
   sembuff.sem_op = -1;
   sembuff.sem_flg = !IPC_NOWAIT;
 
-  if(semop(semid , &sembuff , 1) == -1){
+  if (semop(semid, &sembuff, 1) == -1) {
     perror("Error in down operation");
     exit(-1);
-  }
-  else if (DEBUG){
-    printf("Down operation performed sucessfully of semid = %d\n" , semid);
+  } else if (DEBUG) {
+    printf("Down operation performed sucessfully of semid = %d\n", semid);
   }
 }
 
-int initSchProShm(int pid )
-{
-  int id2 = ftok("keyfiles/PRO_SCH_SHM" , pid);
-  int shmid = shmget(id2 , sizeof(int) ,IPC_CREAT | 0666);
- 
-  if(shmid == -1){
+int initSchProShm(int pid) {
+  int id2 = ftok("keyfiles/PRO_SCH_SHM", pid);
+  int shmid = shmget(id2, sizeof(int), IPC_CREAT | 0666);
+
+  if (shmid == -1) {
     perror("error in creating shared memory\n");
     exit(-1);
-  }
-  else if (DEBUG){
+  } else if (DEBUG) {
     printf("shmadd created sucessfully\n");
   }
   fflush(stdout);
 
   return shmid;
-} 
+}

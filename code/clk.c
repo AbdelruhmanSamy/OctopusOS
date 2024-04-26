@@ -12,13 +12,13 @@ int shmid;
 /* Clear the resources before exit */
 void cleanUpClk(int signum) {
   shmctl(shmid, IPC_RMID, NULL);
-  printf("Clock terminating!\n");
+  printf(ANSI_YELLOW "==>Clock terminating!\n" ANSI_RESET);
   exit(0);
 }
 
 /* This file represents the system clock for ease of calculations */
 int main(int argc, char *argv[]) {
-  printf("Clock starting\n");
+  printf(ANSI_YELLOW "==>CLK: Clock starting\n" ANSI_RESET);
   signal(SIGINT, cleanUpClk);
   int clk = 0;
   // Create shared memory for one integer variable 4 bytes
