@@ -1,6 +1,7 @@
 #include "headers.h"
 #include "scheduler.h"
 #include "structs.h"
+#include <unistd.h>
 
 int *shmAdd;
 int shmid;
@@ -23,7 +24,7 @@ void sigTermHandler(int signum) {
   // cleanup which kills the clock and so the whole app
   // make sure it doesn't affect the process
   printf(ANSI_GREY "==>process %d: Terminating\n" ANSI_RESET, getpid());
-  raise(SIGKILL);
+  exit(getpid());
 }
 
 int main(int agrc, char *argv[]) {
@@ -32,11 +33,12 @@ int main(int agrc, char *argv[]) {
 
   signal(SIGINT, clearResources);
   signal(SIGTERM, sigTermHandler);
-
-  if (atexit(cleanUp) != 0) {
-    perror("atexit");
-    exit(1);
-  }
+  // FIXME: commented those because they kill the clock
+  //
+  //  if (atexit(cleanUp) != 0) {
+  //    perror("atexit");
+  //    exit(1);
+  //  }
 
   shmid = initSchProShm(getpid());
   shmAdd = (int *)shmat(shmid, (void *)0, 0);
