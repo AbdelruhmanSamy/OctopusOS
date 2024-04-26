@@ -11,7 +11,6 @@
 #include <unistd.h>
 
 int msgQID;
-d_list *p_table = NULL;
 
 /**
  * main - The main function of the scheduler.
@@ -23,7 +22,6 @@ d_list *p_table = NULL;
 int main(int argc, char *argv[]) {
   int key, gen_msgQID, response, quantem;
   scheduler_type schedulerType;
-  d_list *processTable = NULL;
 
   signal(SIGINT, clearSchResources);
   signal(SIGTERM, clearSchResources);
@@ -40,14 +38,8 @@ int main(int argc, char *argv[]) {
     printf(ANSI_BLUE "==>SCH: My Scheduler Type is %i\n" ANSI_RESET,
            (int)schedulerType);
 
-  p_table = processTable = createList(freeProcessEntry);
-  if (!processTable) {
-    perror("Error while creating process table");
-    exit(-1);
-  }
-
   msgQID = gen_msgQID = initSchGenCom();
-  schedule(schedulerType, quantem, gen_msgQID, processTable);
+  schedule(schedulerType, quantem, gen_msgQID);
 
   // TODO Initialize Scheduler
   //  Create Wait queue ??
@@ -78,15 +70,13 @@ int main(int argc, char *argv[]) {
  * @gen_msgQID: msg queue ID between generator & scheduler
  * @processTable: pointer to process table
  */
-void schedule(scheduler_type schType, int quantem, int gen_msgQID,
-              d_list *processTable) {
+void schedule(scheduler_type schType, int quantem, int gen_msgQID) {
   void *readyQ;
-  process_t process, *newProcess;
+  process_t process, *newProcess, **currentProcess = NULL;
   int processesFlag = 1; // to know when to stop getting processes from gen
   int rQuantem = quantem;
-  int currentTime = getClk();
-  int lastTime = currentTime;
-  int (*algorithm)(void *readyQ, process_t *newProcess, int *rQuantem);
+  int (*algorithm)(void *readyQ, process_t **currentProcess,
+                   process_t *newProcess, int *rQuantem);
 
   switch (schType) {
   case HPF:
@@ -105,23 +95,26 @@ void schedule(scheduler_type schType, int quantem, int gen_msgQID,
     exit(-1);
   }
 
-  while (1) {
-    currentTime = getClk();
-    if (currentTime == lastTime)
-      continue;
+  currentProcess = malloc(sizeof(process_t *));
+  if (!currentProcess) {
+    perror("malloc");
+    exit(-1);
+  }
 
+  *currentProcess = NULL;
+  while (1) {
     newProcess = NULL;
+
     if (processesFlag) {
       if (getProcess(&processesFlag, gen_msgQID, &process))
-        newProcess = createProcess(processTable, &process);
+        newProcess = createProcess(&process);
+    }
 
-      algorithm(readyQ, newProcess, &rQuantem);
-      if (rQuantem <= 0)
-        rQuantem = quantem;
-    } else if (processTable->size == 0)
+    if (!algorithm(readyQ, currentProcess, newProcess, &rQuantem) &&
+        !processesFlag)
       break;
-
-    lastTime = currentTime;
+    if (rQuantem <= 0)
+      rQuantem = quantem;
   }
   printf(ANSI_BLUE "==>SCH: All processes are done\n" ANSI_RESET);
 }
@@ -149,9 +142,9 @@ int compareHPF(void *e1, void *e2) {
  * Return: 1 if e2 Remaining Time is less, -1 if e1 is less, 0 if they are equal
  */
 int compareSRTN(void *e1, void *e2) {
-  if (((process_t *)e1)->RT < ((process_t *)e2)->RT)
+  if (*((process_t *)e1)->RT < *((process_t *)e2)->RT)
     return -1;
-  else if (((process_t *)e1)->RT > ((process_t *)e2)->RT)
+  else if (*((process_t *)e1)->RT > *((process_t *)e2)->RT)
     return 1;
   return 0;
 }
@@ -163,13 +156,21 @@ int compareSRTN(void *e1, void *e2) {
  * @process: pointer to process
  * @rQuantem: remaining quantem time
  *
- * Return: 1 on success, 0 on failure
+ * Return: 0 if no process is no the system, 1 otherwise
  */
-int HPFScheduling(void *readyQueue, process_t *process, int *rQuantem) {
+int HPFScheduling(void *readyQueue, process_t **currentProcess,
+                  process_t *process, int *rQuantem) {
   min_heap *readyQ = (min_heap *)readyQueue;
+  (void)rQuantem;
 
   if (process)
     insertMinHeap(&readyQ, process);
+
+  if (!(*currentProcess) && !getMin(readyQ))
+    return 0;
+
+  if (!(*currentProcess))
+    contextSwitch(currentProcess, extractMin(readyQ));
   return 1;
 }
 
@@ -180,23 +181,22 @@ int HPFScheduling(void *readyQueue, process_t *process, int *rQuantem) {
  * @process: pointer to process
  * @rQuantem: remaining quantem time
  *
- * Return: 1 on success, 0 on failure
+ * Return: 0 if no process is no the system, 1 otherwise
  */
-int SRTNScheduling(void *readyQueue, process_t *process, int *rQuantem) {
+int SRTNScheduling(void *readyQueue, process_t **currentProcess,
+                   process_t *process, int *rQuantem) {
   min_heap *readyQ = (min_heap *)readyQueue;
-  process_t *currentProcess;
+  process_t *newScheduledProcess = NULL;
+  (void)rQuantem;
 
-  if (process) {
-    insertMinHeap(&readyQ, (void *)process);
-    currentProcess = (process_t *)extractMin(readyQ);
+  if (process)
+    insertMinHeap(&readyQ, process);
 
-    if (DEBUG)
-      printf("inside SRTN, RT = %d\n", *(currentProcess->RT));
-    fflush(stdout);
+  if (!(*currentProcess) && !getMin(readyQ))
+    return 0;
 
-    if (process == currentProcess)
-      contextSwitch();
-  }
+  if (!(*currentProcess) || *currentProcess != (process_t *)getMin(readyQ))
+    contextSwitch(currentProcess, extractMin(readyQ));
 
   return 1;
 }
@@ -208,19 +208,22 @@ int SRTNScheduling(void *readyQueue, process_t *process, int *rQuantem) {
  * @process: pointer to process
  * @rQuantem: remaining quantem time
  *
- * Return: 1 on success, 0 on failure
+ * Return: 0 if no process is no the system, 1 otherwise
  */
-int RRScheduling(void *readyQueue, process_t *process, int *rQuantem) {
+int RRScheduling(void *readyQueue, process_t **currentProcess,
+                 process_t *process, int *rQuantem) {
   queue *readyQ = (queue *)readyQueue;
 
   if (process)
     push(readyQ, process);
 
-  if (!empty(readyQ)) {
-    (*rQuantem)--;
-    if (*rQuantem <= 0)
-      contextSwitch();
-  }
+  if (!(*currentProcess) && empty(readyQ))
+    return 0;
+
+  (*rQuantem)--;
+  if (*rQuantem <= 0)
+    contextSwitch(currentProcess, pop(readyQ));
+
   return 1;
 }
 
@@ -278,53 +281,25 @@ scheduler_type getScParams(char *argv[], int *quantem) {
 }
 
 /**
- * freeProcessEntry - process entry free function
- *
- * @processEntry: process entry
- */
-void freeProcessEntry(void *processEntry) {
-  if (processEntry)
-    free(((process_entry_t *)processEntry)->PCB.process);
-  free(processEntry);
-}
-
-/**
  * createProcess - create a new process and add it to process table
  *
  * @processTable: pointer to process table
  * @process: pointer to new process info
  */
-process_t *createProcess(d_list *processTable, process_t *process) {
+process_t *createProcess(process_t *process) {
   pid_t pid;
-  process_entry_t *processEntry;
-  process_t *pcbProcess;
+  process_t *newProcess;
 
-  processEntry = malloc(sizeof(*processEntry));
-  if (!processEntry) {
+  newProcess = malloc(sizeof(*newProcess));
+  if (!newProcess) {
     perror("malloc");
     exit(-1);
   }
 
-  pcbProcess = malloc(sizeof(*pcbProcess));
-  if (!pcbProcess) {
-    perror("malloc");
-    exit(-1);
-  }
-
-  *pcbProcess = *process;
-  processEntry->PCB.state = READY;
-  processEntry->PCB.process = pcbProcess;
+  *newProcess = *process;
+  newProcess->state = READY;
 
   pid = fork();
-
-  processEntry->p_id = pid;
-
-  int shmid = initSchProShm(pid);
-  int *shmAdd = (int *)shmat(shmid, (void *)0, 0);
-
-  processEntry->PCB.process->RT = shmAdd;
-  *processEntry->PCB.process->RT = process->BT;
-
   if (pid == -1) {
     perror("fork");
     exit(-1);
@@ -338,20 +313,20 @@ process_t *createProcess(d_list *processTable, process_t *process) {
     exit(0);
   }
 
-  if (!insertNodeEnd(processTable, processEntry)) {
-    perror("insertNodeEnd");
-    exit(-1);
-  }
+  newProcess->pid = pid;
 
-  printf(ANSI_BLUE "==>SCH: Added process to processes table\n" ANSI_RESET);
-  return pcbProcess;
+  int shmid = initSchProShm(pid);
+  int *shmAdd = (int *)shmat(shmid, (void *)0, 0);
+
+  newProcess->RT = shmAdd;
+  *newProcess->RT = process->BT;
+
+  return newProcess;
 }
 
-void contextSwitch() {
+void contextSwitch(process_t **currentProcess, process_t **newProcess) {
   printf(ANSI_BLUE "==>SCH: Context Switching\n" ANSI_RESET);
   // TODO Context Switch (print to log file in start and finish)
-  //  When SRT process comes to ready queue (by myself)
-  //  When quantem ends (communicate with clk)
   //  When a process finishes (process get SIGTRM)
   //  When a process gets a signal (SIGKILL, SIGINT, SIGSTP, ...etc)
   //  The Switch
@@ -364,39 +339,31 @@ void contextSwitch() {
 
 /**
  * preemptProcessByIndex - Preempt a process by its index in the process table
- * @processTable: pointer to process table
- * @index: index of the process to preempt
+ * @process: pointer to process
  */
-void preemptProcessByIndex(d_list *processTable, unsigned int index) {
-  process_entry_t *processEntry = getNode(processTable, index)->data;
-  PCB_t *pcb = &processEntry->PCB;
-
+void preemptProcess(process_t *process) {
   printf(ANSI_GREY "==>SCH: Preempting process with id = %i\n" ANSI_RESET,
-         processEntry->p_id);
+         process->pid);
 
-  if (pcb->state == RUNNING) {
-    kill(processEntry->p_id, SIGSTOP);
-    pcb->state = READY;
-    pcb->process->LST = getClk();
+  if (process->state == RUNNING) {
+    kill(process->pid, SIGSTOP);
+    process->state = STOPPED;
+    process->LST = getClk();
   }
 }
 
 /**
  * resumeProcessByIndex - Resume a process by its index in the process table
- * @processTable: pointer to process table
- * @index: index of the process to resume
+ * @process: pointer to process
  */
-void resumeProcessByIndex(d_list *processTable, unsigned int index) {
-  process_entry_t *processEntry = getNode(processTable, index)->data;
-  PCB_t *pcb = &processEntry->PCB;
-
+void resumeProcessByIndex(process_t *process) {
   printf(ANSI_BLUE "==>SCH: Resuming process with id = %i\n" ANSI_RESET,
-         processEntry->p_id);
+         process->pid);
 
-  if (pcb->state == READY) {
-    kill(processEntry->p_id, SIGCONT);
-    pcb->state = RUNNING;
-    pcb->process->WT += getClk() - pcb->process->LST;
+  if (process->state == READY) {
+    kill(process->pid, SIGCONT);
+    process->state = RUNNING;
+    process->WT += getClk() - process->LST;
   }
 }
 
@@ -406,8 +373,6 @@ void resumeProcessByIndex(d_list *processTable, unsigned int index) {
 void cleanUpScheduler() {
   msgctl(msgQID, IPC_RMID, (struct msqid_ds *)0);
   destroyClk(true);
-  if (p_table)
-    destroyList(&p_table);
   killpg(getpgrp(), SIGINT);
 }
 
@@ -429,7 +394,7 @@ int initSchProQ() {
     perror("error in creating msg queue between process & scheduler");
     exit(-1);
   } else if (DEBUG) {
-    printf("Message queue created sucessfully with pid = %d\n", q_id);
+    printf("Message queue created successfully with pid = %d\n", q_id);
   }
 
   return q_id;
@@ -439,7 +404,7 @@ void sigUsr1Handler(int signum) {
   // TODO: write an appropriate implementation for this function
   // detach the scheduler from the sharedmemory of the rem. time
   // of this process (the running one)
-  // FIXME: Just tell me why you kill the sch here I spent 1 hour debuging for
+  // FIXME: Just tell me why you kill the sch here I spent 1 hour debugging for
   // this
   // raise(SIGKILL);
 
@@ -447,15 +412,4 @@ void sigUsr1Handler(int signum) {
   int status;
   killedProcess = wait(&status);
   printf(ANSI_GREY "==>SCH: Process %d terminated\n" ANSI_RESET, killedProcess);
-
-  for (int i = 0; i < p_table->size; i++) {
-    process_entry_t *processEntry = getNode(p_table, i)->data;
-    if (processEntry->p_id == killedProcess) {
-      deleteNode(p_table, i);
-      break;
-    }
-  }
-
-  printf(ANSI_GREY "==>SCH: number of processes = %d\n" ANSI_RESET,
-         (int)p_table->size);
 }

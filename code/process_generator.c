@@ -9,7 +9,6 @@
 
 #include "process_generator.h"
 #include "headers.h"
-#include <math.h>
 #include <string.h>
 
 /**
@@ -316,12 +315,13 @@ void sendProcessesToScheduler(queue *processes, int msgQID) {
                        "priority: %d to scheduler\n" ANSI_RESET,
            process->id, process->AT, process->BT, process->priority);
     // TODO: check this initial values later
-    // process->RT = process->BT;    //this is set inside the scheduler (shmAdd)
     process->WT = 0;
     process->TA = 0;
     process->LST = currentTime;
     process->ST = -1;
     process->FT = -1;
+    process->state = READY;
+    process->pid = 1;
 
     response = msgsnd(msgQID, process, sizeof(process_t), !IPC_NOWAIT);
     if (response == -1) {
