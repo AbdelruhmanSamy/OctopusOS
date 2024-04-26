@@ -22,13 +22,12 @@ void sigTermHandler(int signum) {
   // I added them because process was reaching return 0 and making the exit
   // cleanup which kills the clock and so the whole app
   // make sure it doesn't affect the process
-  printf("In process %d, Terminating\n", getpid());
+  printf(ANSI_GREY "==>process %d: Terminating\n" ANSI_RESET, getpid());
   raise(SIGKILL);
 }
 
 int main(int agrc, char *argv[]) {
 
-  printf("In process with pid = %d\n", getpid());
   fflush(stdout);
 
   signal(SIGINT, clearResources);
@@ -42,11 +41,10 @@ int main(int agrc, char *argv[]) {
   shmid = initSchProShm(getpid());
   shmAdd = (int *)shmat(shmid, (void *)0, 0);
 
-  if (DEBUG)
-    printf("In process %d , RT = %d\n", getpid(), *shmAdd);
-
   fflush(stdout);
   initClk();
+
+  printf(ANSI_TEAL "==>process %d: Started\n" ANSI_RESET, getpid());
 
   int preTime = getClk();
   while (*shmAdd > 0) {
@@ -55,10 +53,9 @@ int main(int agrc, char *argv[]) {
     if (currTime != preTime) {
       preTime = currTime;
 
+      printf(ANSI_TEAL "==>process %d: RT = %d \n" ANSI_RESET, getpid(),
+             *shmAdd);
       (*shmAdd)--;
-
-      if (DEBUG)
-        printf("In process %d, RT = %d \n", getpid(), *shmAdd);
     }
   }
 
