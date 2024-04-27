@@ -1,0 +1,6 @@
+At time 3 process 1 started arr 2 total 20 remain 20 wait 1
+At time 6 process 1 stopped arr 2 total 20 remain 17 wait 1
+At time 6 process 2 started arr 5 total 10 remain 10 wait 1
+At time 17 process 3 started arr 9 total 15 remain 15 wait 8
+At time 32 process 4 started arr 11 total 17 remain 17 wait 21
+At time 50 process 1 started arr 2 total 20 remain 16 wait 48

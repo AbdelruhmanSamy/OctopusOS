@@ -41,13 +41,13 @@ int main(int argc, char *argv[]) {
     printf(ANSI_BLUE "==>SCH: My Scheduler Type is %i\n" ANSI_RESET,
            (int)schedulerType);
 
+  createLogFile();
   msgQID = gen_msgQID = initSchGenCom();
   schedule(schedulerType, quantem, gen_msgQID);
 
   // TODO Initialize Scheduler
   //  Create Wait queue ??
   //  Create log file
-  
   //
   // TODO Create process when generator tells you it is time
   //  Setup COM between process and Scheduler (init msgs queue)
@@ -386,6 +386,9 @@ void startProcess(process_t *process) {
   kill(process->pid, SIGCONT);
   process->state = RUNNING;
   process->WT = getClk() - process->AT;
+
+  // log this
+  logger("started", process);
 }
 
 /**
@@ -401,6 +404,9 @@ void preemptProcess(process_t *process) {
     kill(process->pid, SIGSTOP);
     process->state = STOPPED;
     process->LST = getClk();
+
+    // log this
+    logger("stopped", process);
   }
 }
 
@@ -416,6 +422,9 @@ void resumeProcess(process_t *process) {
     kill(process->pid, SIGCONT);
     process->state = RUNNING;
     process->WT += getClk() - process->LST;
+
+    // log this
+    logger("resumed", process);
   }
 }
 
@@ -464,4 +473,48 @@ void sigUsr1Handler(int signum) {
   killedProcess = wait(&status);
   printf(ANSI_GREY "==>SCH: Process %d terminated\n" ANSI_RESET, killedProcess);
   currentProcess = NULL;
+
+  // log this
+  //TODO
+  // logger("finished", )
+}
+
+void createLogFile()
+{
+  FILE * logFileptr = fopen(LOG_FILE, "w");
+  if (logFileptr == NULL)
+  {
+    perror("Can't Create Log File");
+    exit(-1);
+  }
+
+  printf("Started Logging\n");
+  fclose(logFileptr);
+}
+
+void logger(char * msg, process_t * p)
+{
+  
+  // appending to the previously created file
+  FILE * logFileptr = fopen(LOG_FILE, "a");
+  
+  if (logFileptr == NULL)
+  {
+    perror("Can't Open Log File");
+    exit(-1);
+  }
+  int clk = getClk();
+  float WTA = p->TA / (float) p->BT;
+
+  fprintf(logFileptr, "At time %i process %i %s arr %i total %i remain %i wait %i",
+  clk, p->id, msg, p->AT, p->BT, *p->RT, p->WT);
+  
+  if (strcmp(msg, "finished") == 0)
+  {
+    fprintf(logFileptr, " TA %i WTA %.2f", p->TA, WTA);
+  }
+  
+  fprintf(logFileptr, "\n");
+
+  fclose(logFileptr);
 }
