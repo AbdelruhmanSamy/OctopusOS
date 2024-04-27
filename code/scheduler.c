@@ -196,12 +196,26 @@ int SRTNScheduling(void *readyQueue, process_t *process, int *rQuantem) {
   if (process)
     insertMinHeap(&readyQ, process);
 
-  if (!(currentProcess) && !getMin(readyQ))
+  printf("SRTN Queue size: %d\n", (int)readyQ->size);
+
+  if (!currentProcess && !getMin(readyQ))
     return 0;
 
-  if (!(currentProcess) || currentProcess != (process_t *)getMin(readyQ))
-    contextSwitch((process_t *)(extractMin(readyQ)));
+  if (!currentProcess) {
+    newScheduledProcess = (process_t *)extractMin(readyQ);
+    contextSwitch(newScheduledProcess);
+  } else if (getMin(readyQ) &&
+             compareSRTN(getMin(readyQ), currentProcess) < 0) {
+    preemptProcess(currentProcess);
+    newScheduledProcess = (process_t *)extractMin(readyQ);
+    insertMinHeap(&readyQ, currentProcess);
+    currentProcess = NULL;
+    contextSwitch(newScheduledProcess);
+  }
 
+  // if (!(currentProcess) || currentProcess != (process_t *)getMin(readyQ)) {
+  //   contextSwitch((process_t *)(extractMin(readyQ)));
+  // }
   return 1;
 }
 
@@ -339,8 +353,7 @@ void contextSwitch(process_t *newProcess) {
     currentProcess = newProcess;
     return;
   }
-  if (currentProcess->state == RUNNING) {
-    preemptProcess(currentProcess);
+  if (currentProcess->state == RUNNING && newProcess) {
     resumeProcess(newProcess);
     currentProcess = newProcess;
     return;
@@ -350,11 +363,10 @@ void contextSwitch(process_t *newProcess) {
   //  When a process finishes (process get SIGTRM)
   //  When a process gets a signal (SIGKILL, SIGINT, SIGSTP, ...etc)
   //  The Switch
-  //    Move old process to ready or wait or (clear after, if it has terminated)
-  //    Save PCB if it still exist (set attributes)
-  //    Schedule new Process (We need the algo here)
-  //    Load PCB (set attributes)
-  //    Tell the process to start
+  //    Move old process to ready or wait or (clear after, if it has
+  //    terminated) Save PCB if it still exist (set attributes) Schedule new
+  //    Process (We need the algo here) Load PCB (set attributes) Tell the
+  //    process to start
 }
 
 /**
@@ -379,9 +391,11 @@ void preemptProcess(process_t *process) {
   printf(ANSI_GREY "==>SCH: Preempting process with id = %i\n" ANSI_RESET,
          process->pid);
 
-  kill(process->pid, SIGSTOP);
-  process->state = STOPPED;
-  process->LST = getClk();
+  if (process->state == RUNNING) {
+    kill(process->pid, SIGSTOP);
+    process->state = STOPPED;
+    process->LST = getClk();
+  }
 }
 
 /**
@@ -392,9 +406,11 @@ void resumeProcess(process_t *process) {
   printf(ANSI_BLUE "==>SCH: Resuming process with id = %i\n" ANSI_RESET,
          process->pid);
 
-  kill(process->pid, SIGCONT);
-  process->state = RUNNING;
-  process->WT += getClk() - process->LST;
+  if (process->state == STOPPED) {
+    kill(process->pid, SIGCONT);
+    process->state = RUNNING;
+    process->WT += getClk() - process->LST;
+  }
 }
 
 /**
@@ -434,9 +450,8 @@ void sigUsr1Handler(int signum) {
   // TODO: write an appropriate implementation for this function
   // detach the scheduler from the sharedmemory of the rem. time
   // of this process (the running one)
-  // FIXME: Just tell me why you kill the sch here I spent 1 hour debugging for
-  // this
-  // raise(SIGKILL);
+  // FIXME: Just tell me why you kill the sch here I spent 1 hour debugging
+  // for this raise(SIGKILL);
 
   pid_t killedProcess;
   int status;
