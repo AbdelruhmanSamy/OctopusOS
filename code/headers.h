@@ -41,6 +41,9 @@
 
 #define SHKEY 300
 
+#define LOG_FILE "scheduler.log"
+#define PERF_FILE "scheduler.perf"
+
 //===============================
 // ARGUMENTS
 //===============================

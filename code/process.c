@@ -67,5 +67,9 @@ int main(int agrc, char *argv[]) {
 
   raise(SIGTERM);
 
+  // log this 
+  //TODO
+  // logger("finished")
+
   return 0;
 }

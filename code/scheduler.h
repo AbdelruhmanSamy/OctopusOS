@@ -42,3 +42,10 @@ void resumeProcess(process_t *process);
 // it's termination
 int initSchProQ();
 void sigUsr1Handler(int signum);
+
+//==============================
+// Logging Functions
+//==============================
+
+void createLogFile();
+void logger(char * action, process_t* process_pcb);
