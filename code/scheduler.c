@@ -78,7 +78,7 @@ void schedule(scheduler_type schType, int quantem, int gen_msgQID) {
   process_t process, *newProcess;
   int processesFlag = 1; // to know when to stop getting processes from gen
   int rQuantem = quantem;
-  int (*algorithm)(void *readyQ, process_t *newProcess, int *rQuantem);
+  int (*algorithm)(void **readyQ, process_t *newProcess, int *rQuantem);
 
   switch (schType) {
   case HPF:
@@ -112,7 +112,7 @@ void schedule(scheduler_type schType, int quantem, int gen_msgQID) {
         newProcess = createProcess(&process);
     }
 
-    if (!algorithm(readyQ, newProcess, &rQuantem) && !processesFlag)
+    if (!algorithm(&readyQ, newProcess, &rQuantem) && !processesFlag)
       break;
     if (rQuantem <= 0)
       rQuantem = quantem;
@@ -162,20 +162,20 @@ int compareSRTN(void *e1, void *e2) {
  *
  * Return: 0 if no process is no the system, 1 otherwise
  */
-int HPFScheduling(void *readyQueue, process_t *process, int *rQuantem) {
-  min_heap *readyQ = (min_heap *)readyQueue;
+int HPFScheduling(void **readyQueue, process_t *process, int *rQuantem) {
+  min_heap **readyQ = (min_heap **)readyQueue;
   (void)rQuantem;
 
   if (process)
-    insertMinHeap(&readyQ, process);
+    insertMinHeap(readyQ, process);
 
-  printf("Queue dif size: %d\n", (int)readyQ->size);
+  printf("Queue dif size: %d\n", (int)(*readyQ)->size);
 
-  if (!currentProcess && !getMin(readyQ))
+  if (!currentProcess && !getMin(*readyQ))
     return 0;
 
   if (!currentProcess)
-    contextSwitch((process_t *)(extractMin(readyQ)));
+    contextSwitch((process_t *)(extractMin(*readyQ)));
   return 1;
 }
 
@@ -188,27 +188,27 @@ int HPFScheduling(void *readyQueue, process_t *process, int *rQuantem) {
  *
  * Return: 0 if no process is no the system, 1 otherwise
  */
-int SRTNScheduling(void *readyQueue, process_t *process, int *rQuantem) {
-  min_heap *readyQ = (min_heap *)readyQueue;
+int SRTNScheduling(void **readyQueue, process_t *process, int *rQuantem) {
+  min_heap **readyQ = (min_heap**)readyQueue;
   process_t *newScheduledProcess = NULL;
   (void)rQuantem;
 
   if (process)
-    insertMinHeap(&readyQ, process);
+    insertMinHeap(readyQ, process);
 
-  printf("SRTN Queue size: %d\n", (int)readyQ->size);
+  printf("SRTN Queue size: %d\n", (int)(*readyQ)->size);
 
-  if (!currentProcess && !getMin(readyQ))
+  if (!currentProcess && !getMin(*readyQ))
     return 0;
 
   if (!currentProcess) {
-    newScheduledProcess = (process_t *)extractMin(readyQ);
+    newScheduledProcess = (process_t *)extractMin(*readyQ);
     contextSwitch(newScheduledProcess);
-  } else if (getMin(readyQ) &&
-             compareSRTN(getMin(readyQ), currentProcess) < 0) {
+  } else if (getMin(*readyQ) &&
+             compareSRTN(getMin(*readyQ), currentProcess) < 0) {
     preemptProcess(currentProcess);
-    newScheduledProcess = (process_t *)extractMin(readyQ);
-    insertMinHeap(&readyQ, currentProcess);
+    newScheduledProcess = (process_t *)extractMin(*readyQ);
+    insertMinHeap(readyQ, currentProcess);
     currentProcess = NULL;
     contextSwitch(newScheduledProcess);
   }
@@ -228,20 +228,20 @@ int SRTNScheduling(void *readyQueue, process_t *process, int *rQuantem) {
  *
  * Return: 0 if no process is no the system, 1 otherwise
  */
-int RRScheduling(void *readyQueue, process_t *process, int *rQuantem) {
-  queue *readyQ = (queue *)readyQueue;
+int RRScheduling(void **readyQueue, process_t *process, int *rQuantem) {
+  queue **readyQ = (queue **)readyQueue;
 
   if (process)
-    push(readyQ, process);
+    push(*readyQ, process);
 
-  if (!(currentProcess) && empty(readyQ))
+  if (!(currentProcess) && empty(*readyQ))
     return 0;
 
-  printf("Queue size: %d\n", (int)size(readyQ));
+  printf("Queue size: %d\n", (int)size(*readyQ));
 
   (*rQuantem)--;
   if (*rQuantem <= 0) {
-    contextSwitch((process_t *)pop(readyQ));
+    contextSwitch((process_t *)pop(*readyQ));
   }
 
   return 1;
