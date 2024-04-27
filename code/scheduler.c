@@ -338,18 +338,30 @@ void contextSwitch(process_t **currentProcess, process_t **newProcess) {
 }
 
 /**
- * preemptProcessByIndex - Preempt a process by its index in the process table
+ * startProcess - Start a process by pid
+ * @process: pointer to process
+ */
+void startProcess(process_t *process) {
+  printf(ANSI_BLUE "==>SCH: Starting process with id = %i\n" ANSI_RESET,
+         process->pid);
+
+  kill(process->pid, SIGCONT);
+  process->state = RUNNING;
+  process->WT = getClk() - process->AT;
+}
+
+/**
+ * preemptProcessByIndex - Preempt a process by its index in the process
+ * table
  * @process: pointer to process
  */
 void preemptProcess(process_t *process) {
   printf(ANSI_GREY "==>SCH: Preempting process with id = %i\n" ANSI_RESET,
          process->pid);
 
-  if (process->state == RUNNING) {
-    kill(process->pid, SIGSTOP);
-    process->state = STOPPED;
-    process->LST = getClk();
-  }
+  kill(process->pid, SIGSTOP);
+  process->state = STOPPED;
+  process->LST = getClk();
 }
 
 /**
@@ -360,11 +372,9 @@ void resumeProcessByIndex(process_t *process) {
   printf(ANSI_BLUE "==>SCH: Resuming process with id = %i\n" ANSI_RESET,
          process->pid);
 
-  if (process->state == READY) {
-    kill(process->pid, SIGCONT);
-    process->state = RUNNING;
-    process->WT += getClk() - process->LST;
-  }
+  kill(process->pid, SIGCONT);
+  process->state = RUNNING;
+  process->WT += getClk() - process->LST;
 }
 
 /**

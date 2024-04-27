@@ -33,8 +33,9 @@ void contextSwitch(process_t **currentProcess, process_t **newProcess);
 // stats
 // TODO: make sure that we want to update by the index if not make a version
 // with pid
-void preemptProcessByIndex(process_t *process);
-void resumeProcessByIndex(process_t *process);
+void startProcess(process_t *process);
+void preemptProcess(process_t *process);
+void resumeProcess(process_t *process);
 
 //===============================
 // IPC Functions
