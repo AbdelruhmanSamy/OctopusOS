@@ -11,7 +11,7 @@
 min_heap *createMinHeap(int (*comp)(void *, void *)) {
   min_heap *newHeap = malloc(sizeof(*newHeap));
   newHeap->arr = malloc(sizeof(void *));
-  newHeap->capacity = 1;
+  newHeap->capacity = 10;
   newHeap->size = 0;
   newHeap->compare = comp;
 
@@ -27,6 +27,9 @@ void insertMinHeap(min_heap **heap, void *element) {
   // printf("entered insertion safely\n");
   // printHeap((*heap));
   // }
+  //
+  // FIXME: something here is not working size increae then decrease suddenly
+  // when double capacity is needed
 
   if ((*heap)->size == (*heap)->capacity)
     (*heap) = *doubleCapacity((*heap));

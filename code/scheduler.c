@@ -121,8 +121,6 @@ void schedule(scheduler_type schType, int quantem, int gen_msgQID) {
   printf(ANSI_BLUE "==>SCH: All processes are done\n" ANSI_RESET);
   // TODO: remove this infinite loop
   // Clean up and exit
-  while (1)
-    ;
 }
 
 /**
@@ -171,10 +169,12 @@ int HPFScheduling(void *readyQueue, process_t *process, int *rQuantem) {
   if (process)
     insertMinHeap(&readyQ, process);
 
-  if (!(currentProcess) && !getMin(readyQ))
+  printf("Queue dif size: %d\n", (int)readyQ->size);
+
+  if (!currentProcess && !getMin(readyQ))
     return 0;
 
-  if (!(currentProcess))
+  if (!currentProcess)
     contextSwitch((process_t *)(extractMin(readyQ)));
   return 1;
 }
@@ -199,8 +199,8 @@ int SRTNScheduling(void *readyQueue, process_t *process, int *rQuantem) {
   if (!(currentProcess) && !getMin(readyQ))
     return 0;
 
-  // if (!(*currentProcess) || *currentProcess != (process_t *)getMin(readyQ))
-  //   contextSwitch(currentProcess, extractMin(readyQ));
+  if (!(currentProcess) || currentProcess != (process_t *)getMin(readyQ))
+    contextSwitch((process_t *)(extractMin(readyQ)));
 
   return 1;
 }
@@ -227,7 +227,7 @@ int RRScheduling(void *readyQueue, process_t *process, int *rQuantem) {
 
   (*rQuantem)--;
   if (*rQuantem <= 0) {
-    // contextSwitch((process_t *)pop(readyQ));
+    contextSwitch((process_t *)pop(readyQ));
   }
 
   return 1;
@@ -334,12 +334,16 @@ process_t *createProcess(process_t *process) {
 
 void contextSwitch(process_t *newProcess) {
   printf(ANSI_BLUE "==>SCH: Context Switching\n" ANSI_RESET);
-  if (currentProcess) {
-    printf("current process id = %d\n", currentProcess->pid);
-  }
   if (!currentProcess) {
     startProcess(newProcess);
     currentProcess = newProcess;
+    return;
+  }
+  if (currentProcess->state == RUNNING) {
+    preemptProcess(currentProcess);
+    resumeProcess(newProcess);
+    currentProcess = newProcess;
+    return;
   }
   printf(ANSI_BLUE "==>SCH: Context Switched\n" ANSI_RESET);
   // TODO Context Switch (print to log file in start and finish)
@@ -384,7 +388,7 @@ void preemptProcess(process_t *process) {
  * resumeProcessByIndex - Resume a process by its index in the process table
  * @process: pointer to process
  */
-void resumeProcessByIndex(process_t *process) {
+void resumeProcess(process_t *process) {
   printf(ANSI_BLUE "==>SCH: Resuming process with id = %i\n" ANSI_RESET,
          process->pid);
 
@@ -438,4 +442,5 @@ void sigUsr1Handler(int signum) {
   int status;
   killedProcess = wait(&status);
   printf(ANSI_GREY "==>SCH: Process %d terminated\n" ANSI_RESET, killedProcess);
+  currentProcess = NULL;
 }
