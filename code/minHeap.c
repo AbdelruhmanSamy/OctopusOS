@@ -11,7 +11,7 @@
 min_heap *createMinHeap(int (*comp)(void *, void *)) {
   min_heap *newHeap = malloc(sizeof(*newHeap));
   newHeap->arr = malloc(sizeof(void *));
-  newHeap->capacity = 10;
+  newHeap->capacity = 1;
   newHeap->size = 0;
   newHeap->compare = comp;
 
@@ -24,8 +24,8 @@ min_heap *createMinHeap(int (*comp)(void *, void *)) {
  */
 void insertMinHeap(min_heap **heap, void *element) {
   // if(DEBUG){
-  // printf("entered insertion safely\n");
-  // printHeap((*heap));
+  printf("entered insertion safely\n");
+  printHeap((*heap));
   // }
   //
   // FIXME: something here is not working size increae then decrease suddenly
@@ -38,6 +38,8 @@ void insertMinHeap(min_heap **heap, void *element) {
   (*heap)->size++;
 
   decreaseKey((*heap), (*heap)->size - 1);
+
+  printHeap(*heap);
 }
 
 /**
@@ -55,6 +57,7 @@ void *extractMin(min_heap *heap) {
   heap->arr[heap->size] = 0;
   minHeapify(heap, 0);
 
+  printHeap(heap);
   return minElement;
 }
 
@@ -119,7 +122,10 @@ void minHeapify(min_heap *heap, int ind) {
  * - copying data
  * - freeing memory of the old heap
 */
-min_heap **doubleCapacity(min_heap *heap) {
+min_heap **doubleCapacity(min_heap* heap) {
+  printf("Entered doubleCapacity with the following heap:!!\n");
+  printHeap(heap);
+
   min_heap *newHeap = malloc(sizeof(*newHeap));
   newHeap->capacity = 2 * heap->capacity;
   newHeap->arr = calloc(newHeap->capacity, sizeof(void *));
@@ -130,11 +136,9 @@ min_heap **doubleCapacity(min_heap *heap) {
 
   min_heap **returnval = &newHeap;
 
-  // if(DEBUG){
-  // printf("doubling occurred!!\n");
-  // printHeap(*returnval);
-  // }
-
+  printf("doubling occurred!!\n");
+  printHeap(*returnval);
+  printf("Exiting doubleCapcity\n");
   return returnval;
 }
 
@@ -146,7 +150,7 @@ void swap(void **arr, int ind1, int ind2) {
 }
 
 void printHeap(min_heap *heap) {
-  // printf("=============================\n");
-  // printf("capacity: %d \nsize: %d\n", (int)heap->capacity, (int)heap->size);
-  // printf("=============================\n");
+  printf("=============================\n");
+  printf("capacity: %d, size: %d\n", (int)heap->capacity, (int)heap->size);
+  printf("=============================\n");
 }
