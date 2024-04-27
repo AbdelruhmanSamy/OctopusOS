@@ -339,4 +339,6 @@ void sendProcessesToScheduler(queue *processes, int msgQID) {
     perror("Error in terminating sending processes to scheduler\n");
     exit(-1);
   }
+
+  //george: call log and print to log file
 }

@@ -47,6 +47,7 @@ int main(int argc, char *argv[]) {
   // TODO Initialize Scheduler
   //  Create Wait queue ??
   //  Create log file
+  
   //
   // TODO Create process when generator tells you it is time
   //  Setup COM between process and Scheduler (init msgs queue)
