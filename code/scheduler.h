@@ -18,13 +18,10 @@ void clearSchResources(int signum);
 void schedule(scheduler_type schType, int quantem, int gen_msgQID);
 int compareHPF(void *e1, void *e2);
 int compareSRTN(void *e1, void *e2);
-int HPFScheduling(void *readyQueue, process_t **currentProcess,
-                  process_t *process, int *rQuantem);
-int SRTNScheduling(void *readyQueue, process_t **currentProcess,
-                   process_t *process, int *rQuantem);
-int RRScheduling(void *readyQueue, process_t **currentProcess,
-                 process_t *process, int *rQuantem);
-void contextSwitch(process_t **currentProcess, process_t **newProcess);
+int HPFScheduling(void *readyQueue, process_t *process, int *rQuantem);
+int SRTNScheduling(void *readyQueue, process_t *process, int *rQuantem);
+int RRScheduling(void *readyQueue, process_t *process, int *rQuantem);
+void contextSwitch(process_t *newProcess);
 
 //===============================
 // Preempting Functions

@@ -8,9 +8,12 @@
 
 #include "scheduler.h"
 #include "headers.h"
+#include "structs.h"
+#include <assert.h>
 #include <unistd.h>
 
 int msgQID;
+process_t *currentProcess = NULL;
 
 /**
  * main - The main function of the scheduler.
@@ -72,11 +75,10 @@ int main(int argc, char *argv[]) {
  */
 void schedule(scheduler_type schType, int quantem, int gen_msgQID) {
   void *readyQ;
-  process_t process, *newProcess, **currentProcess = NULL;
+  process_t process, *newProcess;
   int processesFlag = 1; // to know when to stop getting processes from gen
   int rQuantem = quantem;
-  int (*algorithm)(void *readyQ, process_t **currentProcess,
-                   process_t *newProcess, int *rQuantem);
+  int (*algorithm)(void *readyQ, process_t *newProcess, int *rQuantem);
 
   switch (schType) {
   case HPF:
@@ -95,14 +97,14 @@ void schedule(scheduler_type schType, int quantem, int gen_msgQID) {
     exit(-1);
   }
 
-  currentProcess = malloc(sizeof(process_t *));
-  if (!currentProcess) {
-    perror("malloc");
-    exit(-1);
-  }
-
-  *currentProcess = NULL;
+  int curtime = getClk();
+  int lasttime = curtime;
   while (1) {
+    curtime = getClk();
+    if (curtime == lasttime) {
+      lasttime = curtime;
+      continue;
+    }
     newProcess = NULL;
 
     if (processesFlag) {
@@ -110,13 +112,17 @@ void schedule(scheduler_type schType, int quantem, int gen_msgQID) {
         newProcess = createProcess(&process);
     }
 
-    if (!algorithm(readyQ, currentProcess, newProcess, &rQuantem) &&
-        !processesFlag)
+    if (!algorithm(readyQ, newProcess, &rQuantem) && !processesFlag)
       break;
     if (rQuantem <= 0)
       rQuantem = quantem;
+    lasttime = curtime;
   }
   printf(ANSI_BLUE "==>SCH: All processes are done\n" ANSI_RESET);
+  // TODO: remove this infinite loop
+  // Clean up and exit
+  while (1)
+    ;
 }
 
 /**
@@ -158,19 +164,18 @@ int compareSRTN(void *e1, void *e2) {
  *
  * Return: 0 if no process is no the system, 1 otherwise
  */
-int HPFScheduling(void *readyQueue, process_t **currentProcess,
-                  process_t *process, int *rQuantem) {
+int HPFScheduling(void *readyQueue, process_t *process, int *rQuantem) {
   min_heap *readyQ = (min_heap *)readyQueue;
   (void)rQuantem;
 
   if (process)
     insertMinHeap(&readyQ, process);
 
-  if (!(*currentProcess) && !getMin(readyQ))
+  if (!(currentProcess) && !getMin(readyQ))
     return 0;
 
-  if (!(*currentProcess))
-    contextSwitch(currentProcess, extractMin(readyQ));
+  if (!(currentProcess))
+    contextSwitch((process_t *)(extractMin(readyQ)));
   return 1;
 }
 
@@ -183,8 +188,7 @@ int HPFScheduling(void *readyQueue, process_t **currentProcess,
  *
  * Return: 0 if no process is no the system, 1 otherwise
  */
-int SRTNScheduling(void *readyQueue, process_t **currentProcess,
-                   process_t *process, int *rQuantem) {
+int SRTNScheduling(void *readyQueue, process_t *process, int *rQuantem) {
   min_heap *readyQ = (min_heap *)readyQueue;
   process_t *newScheduledProcess = NULL;
   (void)rQuantem;
@@ -192,11 +196,11 @@ int SRTNScheduling(void *readyQueue, process_t **currentProcess,
   if (process)
     insertMinHeap(&readyQ, process);
 
-  if (!(*currentProcess) && !getMin(readyQ))
+  if (!(currentProcess) && !getMin(readyQ))
     return 0;
 
-  if (!(*currentProcess) || *currentProcess != (process_t *)getMin(readyQ))
-    contextSwitch(currentProcess, extractMin(readyQ));
+  // if (!(*currentProcess) || *currentProcess != (process_t *)getMin(readyQ))
+  //   contextSwitch(currentProcess, extractMin(readyQ));
 
   return 1;
 }
@@ -210,19 +214,21 @@ int SRTNScheduling(void *readyQueue, process_t **currentProcess,
  *
  * Return: 0 if no process is no the system, 1 otherwise
  */
-int RRScheduling(void *readyQueue, process_t **currentProcess,
-                 process_t *process, int *rQuantem) {
+int RRScheduling(void *readyQueue, process_t *process, int *rQuantem) {
   queue *readyQ = (queue *)readyQueue;
 
   if (process)
     push(readyQ, process);
 
-  if (!(*currentProcess) && empty(readyQ))
+  if (!(currentProcess) && empty(readyQ))
     return 0;
 
+  printf("Queue size: %d\n", (int)size(readyQ));
+
   (*rQuantem)--;
-  if (*rQuantem <= 0)
-    contextSwitch(currentProcess, pop(readyQ));
+  if (*rQuantem <= 0) {
+    // contextSwitch((process_t *)pop(readyQ));
+  }
 
   return 1;
 }
@@ -308,12 +314,14 @@ process_t *createProcess(process_t *process) {
   if (pid == 0) {
     char *args[] = {"./process.out", NULL};
     // NOTE: If you want to autostart the process, uncomment the next line
-    kill(getpid(), SIGSTOP);
     execvp(args[0], args);
     exit(0);
   }
 
   newProcess->pid = pid;
+  kill(pid, SIGSTOP);
+  printf(ANSI_BLUE "==>SCH: Created process with id = %i\n" ANSI_RESET,
+         newProcess->pid);
 
   int shmid = initSchProShm(pid);
   int *shmAdd = (int *)shmat(shmid, (void *)0, 0);
@@ -324,8 +332,16 @@ process_t *createProcess(process_t *process) {
   return newProcess;
 }
 
-void contextSwitch(process_t **currentProcess, process_t **newProcess) {
+void contextSwitch(process_t *newProcess) {
   printf(ANSI_BLUE "==>SCH: Context Switching\n" ANSI_RESET);
+  if (currentProcess) {
+    printf("current process id = %d\n", currentProcess->pid);
+  }
+  if (!currentProcess) {
+    startProcess(newProcess);
+    currentProcess = newProcess;
+  }
+  printf(ANSI_BLUE "==>SCH: Context Switched\n" ANSI_RESET);
   // TODO Context Switch (print to log file in start and finish)
   //  When a process finishes (process get SIGTRM)
   //  When a process gets a signal (SIGKILL, SIGINT, SIGSTP, ...etc)
