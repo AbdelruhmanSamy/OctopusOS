@@ -53,14 +53,14 @@ void push(queue *q, void *item) {
  * @q: pointer to queue
  */
 void *pop(queue *q) {
-  d_node *n;
+  void *n;
 
   if (empty(q))
     return NULL;
 
-  n = getNode(q->list, 0);
+  n = getNode(q->list, 0)->data;
   deleteNodeStart(q->list);
-  return n->data;
+  return n;
 }
 
 /**
