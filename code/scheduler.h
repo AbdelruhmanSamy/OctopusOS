@@ -16,6 +16,7 @@ void clearSchResources(int signum);
 // Scheduling Algorithms
 //===============================
 void schedule(scheduler_type schType, int quantem, int gen_msgQID);
+void freeQueueData(void *data);
 int compareHPF(void *e1, void *e2);
 int compareSRTN(void *e1, void *e2);
 int HPFScheduling(void **readyQueue, process_t *process, int *rQuantem);
