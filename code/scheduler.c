@@ -487,6 +487,7 @@ void sigUsr1Handler(int signum) {
   killedProcess = wait(&status);
   printf(ANSI_GREY "==>SCH: Process %d terminated\n" ANSI_RESET, killedProcess);
   shmctl(initSchProQ(), IPC_RMID, NULL);
+  currentProcess->TA = getClk() - currentProcess->AT;
   logger("finished", currentProcess);
   free(currentProcess);
   currentProcess = NULL;
