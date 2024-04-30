@@ -55,8 +55,8 @@ int main(int agrc, char *argv[]) {
     if (currTime != preTime) {
       preTime = currTime;
 
-      printf(ANSI_TEAL "==>process %d: RT = %d \n" ANSI_RESET, getpid(),
-             *shmAdd);
+      // printf(ANSI_TEAL "==>process %d: RT = %d \n" ANSI_RESET, getpid(),
+      // *shmAdd);
       (*shmAdd)--;
     }
   }
@@ -66,10 +66,5 @@ int main(int agrc, char *argv[]) {
   destroyClk(false);
 
   raise(SIGTERM);
-
-  // log this 
-  //TODO
-  // logger("finished")
-
   return 0;
 }
