@@ -8,6 +8,8 @@
 
 #include "scheduler.h"
 #include "headers.h"
+#include "minHeap.h"
+#include "queue.h"
 #include "structs.h"
 #include <assert.h>
 #include <unistd.h>
@@ -132,6 +134,17 @@ void schedule(scheduler_type schType, int quantem, int gen_msgQID) {
       rQuantem = quantem;
 
     lastClk = currentClk;
+  }
+  switch (schType) {
+  case HPF:
+  case SRTN:
+    destroyHeap(readyQ);
+    break;
+  case RR:
+    destroyQueue(readyQ);
+    break;
+  default:
+    exit(-1);
   }
   printf(ANSI_BLUE "==>SCH: " ANSI_RED ANSI_BOLD
                    "All processes are done\n" ANSI_RESET);

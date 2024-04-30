@@ -33,3 +33,4 @@ void minHeapify(min_heap *heap, int ind);
 min_heap **doubleCapacity(min_heap *heap);
 void swap(void **arr, int ind1, int ind2);
 void printHeap(min_heap *heap);
+void destroyHeap(min_heap *heap);

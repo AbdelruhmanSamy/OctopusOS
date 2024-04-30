@@ -122,7 +122,7 @@ void minHeapify(min_heap *heap, int ind) {
  * - copying data
  * - freeing memory of the old heap
 */
-min_heap **doubleCapacity(min_heap* heap) {
+min_heap **doubleCapacity(min_heap *heap) {
   // printf("Entered doubleCapacity with the following heap:!!\n");
   // printHeap(heap);
 
@@ -153,4 +153,9 @@ void printHeap(min_heap *heap) {
   printf("=============================\n");
   printf("capacity: %d, size: %d\n", (int)heap->capacity, (int)heap->size);
   printf("=============================\n");
+}
+
+void destroyHeap(min_heap *heap) {
+  free(heap->arr);
+  free(heap);
 }
