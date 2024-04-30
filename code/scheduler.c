@@ -472,18 +472,13 @@ void sigUsr1Handler(int signum) {
   int status;
   killedProcess = wait(&status);
   printf(ANSI_GREY "==>SCH: Process %d terminated\n" ANSI_RESET, killedProcess);
+  logger("finished", currentProcess);
   currentProcess = NULL;
-
-  // log this
-  //TODO
-  // logger("finished", )
 }
 
-void createLogFile()
-{
-  FILE * logFileptr = fopen(LOG_FILE, "w");
-  if (logFileptr == NULL)
-  {
+void createLogFile() {
+  FILE *logFileptr = fopen(LOG_FILE, "w");
+  if (logFileptr == NULL) {
     perror("Can't Create Log File");
     exit(-1);
   }
@@ -492,28 +487,26 @@ void createLogFile()
   fclose(logFileptr);
 }
 
-void logger(char * msg, process_t * p)
-{
-  
+void logger(char *msg, process_t *p) {
+
   // appending to the previously created file
-  FILE * logFileptr = fopen(LOG_FILE, "a");
-  
-  if (logFileptr == NULL)
-  {
+  FILE *logFileptr = fopen(LOG_FILE, "a");
+
+  if (logFileptr == NULL) {
     perror("Can't Open Log File");
     exit(-1);
   }
   int clk = getClk();
-  float WTA = p->TA / (float) p->BT;
+  float WTA = p->TA / (float)p->BT;
 
-  fprintf(logFileptr, "At time %i process %i %s arr %i total %i remain %i wait %i",
-  clk, p->id, msg, p->AT, p->BT, *p->RT, p->WT);
-  
-  if (strcmp(msg, "finished") == 0)
-  {
+  fprintf(logFileptr,
+          "At time %i process %i %s arr %i total %i remain %i wait %i", clk,
+          p->id, msg, p->AT, p->BT, *p->RT, p->WT);
+
+  if (strcmp(msg, "finished") == 0) {
     fprintf(logFileptr, " TA %i WTA %.2f", p->TA, WTA);
   }
-  
+
   fprintf(logFileptr, "\n");
 
   fclose(logFileptr);
