@@ -384,11 +384,15 @@ void startProcess(process_t *process) {
          process->pid);
 
   kill(process->pid, SIGCONT);
-  process->state = RUNNING;
   process->WT = getClk() - process->AT;
 
   // log this
-  logger("started", process);
+  if (process->state == READY)
+    logger("started", process);
+  else if (process->state == STOPPED)
+    logger("resumed", process);
+
+  process->state = RUNNING;
 }
 
 /**
