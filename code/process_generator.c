@@ -315,6 +315,8 @@ void sendProcessesToScheduler(queue *processes, int msgQID) {
                        "priority: %d to scheduler\n" ANSI_RESET,
            process->id, process->AT, process->BT, process->priority);
     // TODO: check this initial values later
+    process->RT = malloc(sizeof(int) * process->BT);
+    *process->RT = process->BT;
     process->WT = 0;
     process->TA = 0;
     process->LST = currentTime;
