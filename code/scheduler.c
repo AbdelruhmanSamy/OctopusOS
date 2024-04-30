@@ -148,6 +148,11 @@ void schedule(scheduler_type schType, int quantem, int gen_msgQID) {
   }
   printf(ANSI_BLUE "==>SCH: " ANSI_RED ANSI_BOLD
                    "All processes are done\n" ANSI_RESET);
+  // FIXME: If I exit here it's all sunshines and rainbows
+  //  if I got back to main it gets angry
+  //  something about the stack needs to be fixed
+  //  anyway don't remove this exit
+  exit(0);
 }
 
 void freeQueueData(void *data) { return; }
