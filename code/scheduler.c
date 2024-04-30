@@ -44,6 +44,7 @@ int main(int argc, char *argv[]) {
   createLogFile();
   msgQID = gen_msgQID = initSchGenCom();
   schedule(schedulerType, quantem, gen_msgQID);
+  printf(ANSI_BLUE "==>SCH: Scheduler Finished\n" ANSI_RESET);
 
   // TODO Initialize Scheduler
   //  Create Wait queue ??
@@ -130,11 +131,10 @@ void schedule(scheduler_type schType, int quantem, int gen_msgQID) {
     if (rQuantem <= 0)
       rQuantem = quantem;
 
-    if (currentClk != lastClk)
-      printf(ANSI_GREY "========================================\n" ANSI_RESET);
     lastClk = currentClk;
   }
-  printf(ANSI_BLUE "==>SCH: All processes are done\n" ANSI_RESET);
+  printf(ANSI_BLUE "==>SCH: " ANSI_RED ANSI_BOLD
+                   "All processes are done\n" ANSI_RESET);
 }
 
 void freeQueueData(void *data) { return; }
@@ -288,7 +288,8 @@ int getProcess(int *processesFlag, int gen_msgQID, process_t *process) {
   }
 
   if (process->id == -1) {
-    printf(ANSI_BLUE "==>SCH: Received All Processes\n" ANSI_RESET);
+    printf(ANSI_BLUE "==>SCH: " ANSI_RED ANSI_BOLD
+                     "Received All Processes\n" ANSI_RESET);
     *processesFlag = 0;
     return 0;
   }
