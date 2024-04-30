@@ -32,6 +32,7 @@
 #define ANSI_WHITE "\x1b[37m"
 #define ANSI_PURPLE "\x1b[35m"
 #define ANSI_RESET "\x1b[0m"
+#define ANSI_BOLD "\x1b[1m"
 
 #define true 1
 #define false 0

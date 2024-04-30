@@ -100,11 +100,21 @@ void schedule(scheduler_type schType, int quantem, int gen_msgQID) {
   }
 
   quantemClk = getClk();
+  int lastClk = quantemClk;
   while (1) {
     currentClk = getClk();
     if (currentClk - quantemClk >= quantem) {
       quantemClk = currentClk;
       rQuantem = 0;
+    }
+    if (currentClk != lastClk) {
+      printf(ANSI_GREY "========================================\n" ANSI_RESET);
+      printf(ANSI_BLUE "==>SCH: Current Clk = %i\n" ANSI_RESET, currentClk);
+      if (currentProcess && *currentProcess->RT > 0) {
+        printf(ANSI_BLUE "==>SCH:" ANSI_GREEN " Process %d " ANSI_BOLD
+                         "RT = %i\n" ANSI_RESET,
+               currentProcess->id, *currentProcess->RT);
+      }
     }
 
     newProcess = NULL;
@@ -113,11 +123,16 @@ void schedule(scheduler_type schType, int quantem, int gen_msgQID) {
         newProcess = createProcess(&process);
     }
 
-    if (!algorithm(&readyQ, newProcess, &rQuantem) && !processesFlag)
+    if (!algorithm(&readyQ, newProcess, &rQuantem) && !processesFlag &&
+        !currentProcess)
       break;
 
     if (rQuantem <= 0)
       rQuantem = quantem;
+
+    if (currentClk != lastClk)
+      printf(ANSI_GREY "========================================\n" ANSI_RESET);
+    lastClk = currentClk;
   }
   printf(ANSI_BLUE "==>SCH: All processes are done\n" ANSI_RESET);
   // TODO: remove this infinite loop
@@ -340,8 +355,8 @@ process_t *createProcess(process_t *process) {
 
   newProcess->pid = pid;
   kill(pid, SIGSTOP);
-  printf(ANSI_BLUE "==>SCH: Created process with id = %i\n" ANSI_RESET,
-         newProcess->pid);
+  // printf(ANSI_BLUE "==>SCH: Created process with id = %i\n" ANSI_RESET,
+  // newProcess->pid);
 
   int shmid = initSchProShm(pid);
   int *shmAdd = (int *)shmat(shmid, (void *)0, 0);
@@ -353,7 +368,6 @@ process_t *createProcess(process_t *process) {
 }
 
 void contextSwitch(process_t *newProcess) {
-  printf(ANSI_BLUE "==>SCH: Context Switching\n" ANSI_RESET);
   if (!currentProcess) {
     startProcess(newProcess);
     currentProcess = newProcess;
@@ -364,7 +378,6 @@ void contextSwitch(process_t *newProcess) {
     currentProcess = newProcess;
     return;
   }
-  printf(ANSI_BLUE "==>SCH: Context Switched\n" ANSI_RESET);
   // TODO Context Switch (print to log file in start and finish)
   //  When a process finishes (process get SIGTRM)
   //  When a process gets a signal (SIGKILL, SIGINT, SIGSTP, ...etc)
