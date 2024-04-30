@@ -135,8 +135,6 @@ void schedule(scheduler_type schType, int quantem, int gen_msgQID) {
     lastClk = currentClk;
   }
   printf(ANSI_BLUE "==>SCH: All processes are done\n" ANSI_RESET);
-  // TODO: remove this infinite loop
-  // Clean up and exit
 }
 
 void freeQueueData(void *data) { return; }
@@ -482,14 +480,14 @@ void sigUsr1Handler(int signum) {
   // TODO: write an appropriate implementation for this function
   // detach the scheduler from the sharedmemory of the rem. time
   // of this process (the running one)
-  // FIXME: Just tell me why you kill the sch here I spent 1 hour debugging
-  // for this raise(SIGKILL);
 
   pid_t killedProcess;
   int status;
   killedProcess = wait(&status);
   printf(ANSI_GREY "==>SCH: Process %d terminated\n" ANSI_RESET, killedProcess);
+  shmctl(initSchProQ(), IPC_RMID, NULL);
   logger("finished", currentProcess);
+  free(currentProcess);
   currentProcess = NULL;
 }
 

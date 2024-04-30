@@ -92,9 +92,9 @@ queue *readInputFile() {
                        "priority: %d into processes queue\n" ANSI_RESET,
            newProcess->id, newProcess->AT, newProcess->BT,
            newProcess->priority);
+    free(line);
   }
 
-  free(line);
   fclose(file);
 
   printf(ANSI_YELLOW "============================" ANSI_RESET "\n");
@@ -340,5 +340,5 @@ void sendProcessesToScheduler(queue *processes, int msgQID) {
     exit(-1);
   }
 
-  //george: call log and print to log file
+  // george: call log and print to log file
 }
