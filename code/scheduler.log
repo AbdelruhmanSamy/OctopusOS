@@ -7,14 +7,18 @@ At time 29 process 3 finished arr 17 total 11 remain 0 wait 1 TA 12 WTA 1.09
 At time 29 process 4 started arr 28 total 1 remain 1 wait 1
 At time 30 process 4 finished arr 28 total 1 remain 0 wait 1 TA 2 WTA 2.00
 At time 30 process 5 started arr 29 total 23 remain 23 wait 1
-At time 53 process 5 finished arr 29 total 23 remain 0 wait 1 TA 24 WTA 1.04
-At time 53 process 8 started arr 51 total 4 remain 4 wait 2
-At time 57 process 8 finished arr 51 total 4 remain 0 wait 2 TA 6 WTA 1.50
-At time 57 process 6 started arr 34 total 4 remain 4 wait 23
-At time 61 process 6 finished arr 34 total 4 remain 0 wait 23 TA 27 WTA 6.75
-At time 61 process 10 started arr 56 total 17 remain 17 wait 5
-At time 78 process 10 finished arr 56 total 17 remain 0 wait 5 TA 22 WTA 1.29
-At time 78 process 9 started arr 52 total 21 remain 21 wait 26
-At time 99 process 9 finished arr 52 total 21 remain 0 wait 26 TA 47 WTA 2.24
-At time 99 process 7 started arr 44 total 24 remain 24 wait 55
-At time 123 process 7 finished arr 44 total 24 remain 0 wait 55 TA 79 WTA 3.29
+At time 34 process 5 stopped arr 29 total 23 remain 19 wait 1
+At time 34 process 6 started arr 34 total 4 remain 4 wait 0
+At time 38 process 6 finished arr 34 total 4 remain 0 wait 0 TA 4 WTA 1.00
+At time 38 process 5 resumed arr 29 total 23 remain 19 wait 9
+At time 51 process 5 stopped arr 29 total 23 remain 5 wait 9
+At time 51 process 8 started arr 51 total 4 remain 4 wait 0
+At time 55 process 8 finished arr 51 total 4 remain 0 wait 0 TA 4 WTA 1.00
+At time 55 process 5 resumed arr 29 total 23 remain 5 wait 26
+At time 59 process 5 finished arr 29 total 23 remain 0 wait 26 TA 30 WTA 1.30
+At time 59 process 10 started arr 56 total 17 remain 17 wait 3
+At time 76 process 10 finished arr 56 total 17 remain 0 wait 3 TA 20 WTA 1.18
+At time 76 process 9 started arr 52 total 21 remain 21 wait 24
+At time 97 process 9 finished arr 52 total 21 remain 0 wait 24 TA 45 WTA 2.14
+At time 97 process 7 started arr 44 total 24 remain 24 wait 53
+At time 121 process 7 finished arr 44 total 24 remain 0 wait 53 TA 77 WTA 3.21

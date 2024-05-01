@@ -17,7 +17,7 @@
 int msgQID;
 process_t *currentProcess = NULL;
 
-perfStats schedulerStats;
+perfStats stats;
 
 /**
  * main - The main function of the scheduler.
@@ -526,10 +526,10 @@ void createLogFile() {
   }
 
   // to initiate performance statistics counters [maybe not the best place to do it]
-  schedulerStats.numFinished = 0;
-  schedulerStats.totalWaitingTime = 0;
-  schedulerStats.totalWorkingTime = 0;
-  schedulerStats.totalWTA = 0;
+  stats.numFinished = 0;
+  stats.totalWaitingTime = 0;
+  stats.totalWorkingTime = 0;
+  stats.totalWTA = 0;
 
   printf("Started Logging\n");
   fclose(logFileptr);
@@ -553,10 +553,11 @@ void logger(char *msg, process_t *p) {
 
   if (strcmp(msg, "finished") == 0) {
     fprintf(logFileptr, " TA %i WTA %.2f", p->TA, WTA);
-    schedulerStats.numFinished += 1;
-    schedulerStats.totalWorkingTime += p->BT;
-    schedulerStats.totalWaitingTime += p->WT;
-    schedulerStats.totalWTA += WTA;
+    stats.WTAs[stats.numFinished] = WTA;
+    stats.numFinished += 1;
+    stats.totalWorkingTime += p->BT;
+    stats.totalWaitingTime += p->WT;
+    stats.totalWTA += WTA;
   }
 
   fprintf(logFileptr, "\n");
@@ -574,12 +575,20 @@ void writePerfFile() {
 
   int finalTime = getClk();
 
-  schedulerStats.CPU_utilization = 100.0 * schedulerStats.totalWorkingTime / finalTime;
-  schedulerStats.avgWTA = (double) schedulerStats.totalWTA / schedulerStats.numFinished;
-  schedulerStats.avgWaitingTime = (double) schedulerStats.totalWaitingTime / schedulerStats.numFinished;
+  stats.CPU_utilization = 100.0 * stats.totalWorkingTime / finalTime;
+  stats.avgWTA = (double) stats.totalWTA / stats.numFinished;
+  stats.avgWaitingTime = (double) stats.totalWaitingTime / stats.numFinished;
 
-  fprintf(perfFile, "CPU utilization = %.2f%%\n", schedulerStats.CPU_utilization);
-  fprintf(perfFile, "Avg WTA = %.2f\n", schedulerStats.avgWTA);
-  fprintf(perfFile, "Avg Waiting = %.2f\n", schedulerStats.avgWaitingTime);
-  // TODO calculate std deviation
+  // calculate STD Deviation of Weighted Turn around time
+  double sumSquaresErr = 0;
+  for (int i = 0; i < stats.numFinished; i++) {
+    sumSquaresErr += (stats.WTAs[i] - stats.avgWTA) * (stats.WTAs[i] - stats.avgWTA);
+  }
+
+  stats.stdWTA = sumSquaresErr / stats.numFinished;
+
+  fprintf(perfFile, "CPU utilization = %.2f%%\n", stats.CPU_utilization);
+  fprintf(perfFile, "Avg WTA = %.2f\n", stats.avgWTA);
+  fprintf(perfFile, "Avg Waiting = %.2f\n", stats.avgWaitingTime);
+  fprintf(perfFile, "Std WTA = %.2f\n", stats.stdWTA);
 }
