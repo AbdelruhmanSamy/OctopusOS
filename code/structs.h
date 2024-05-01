@@ -29,3 +29,21 @@ union SemUn {
   unsigned short *array; /* Array for GETALL, SETALL */
   struct seminfo *__buf; /* Buffer for IPC_INFO (Linux-specific) */
 };
+
+// To create scheduler.perf.
+// The scheduler will create only one instant from this struct
+typedef struct perfStats {
+  
+  // these are incrementally updated each time a process finishes
+  int totalWorkingTime;   // sum of burst times
+  int totalWaitingTime;   // sum of waiting times
+  double totalWTA;        // sum of weighted turnaround times
+  int numFinished;        // number of finished processes
+  
+  // and these are calculated when the last process finishes
+  double CPU_utilization; // = totalWorkingTime / totalTime
+  double avgWaitingTime;  // totalWaitingTime / N
+  double avgWTA;          // totalWTA / N
+  double stdWTA;          // Standard deviation of weighted turnaround time
+                          //= SUM( (WTA[i] - avgWTA)^2 ) / N
+} perfStats;
