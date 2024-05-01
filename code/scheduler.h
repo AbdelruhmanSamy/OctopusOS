@@ -49,3 +49,4 @@ void sigUsr1Handler(int signum);
 
 void createLogFile();
 void logger(char * action, process_t* process_pcb);
+void writePerfFile();

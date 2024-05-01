@@ -17,6 +17,8 @@
 int msgQID;
 process_t *currentProcess = NULL;
 
+perfStats schedulerStats;
+
 /**
  * main - The main function of the scheduler.
  *
@@ -47,6 +49,8 @@ int main(int argc, char *argv[]) {
   msgQID = gen_msgQID = initSchGenCom();
   schedule(schedulerType, quantem, gen_msgQID);
   printf(ANSI_BLUE "==>SCH: Scheduler Finished\n" ANSI_RESET);
+
+  // writePerfFile(); // moved it to the end of schedule() function
 
   // TODO Initialize Scheduler
   //  Create Wait queue ??
@@ -148,6 +152,9 @@ void schedule(scheduler_type schType, int quantem, int gen_msgQID) {
   }
   printf(ANSI_BLUE "==>SCH: " ANSI_RED ANSI_BOLD
                    "All processes are done\n" ANSI_RESET);
+
+  writePerfFile();
+
   // FIXME: If I exit here it's all sunshines and rainbows
   //  if I got back to main it gets angry
   //  something about the stack needs to be fixed
@@ -518,6 +525,12 @@ void createLogFile() {
     exit(-1);
   }
 
+  // to initiate performance statistics counters [maybe not the best place to do it]
+  schedulerStats.numFinished = 0;
+  schedulerStats.totalWaitingTime = 0;
+  schedulerStats.totalWorkingTime = 0;
+  schedulerStats.totalWTA = 0;
+
   printf("Started Logging\n");
   fclose(logFileptr);
 }
@@ -540,9 +553,33 @@ void logger(char *msg, process_t *p) {
 
   if (strcmp(msg, "finished") == 0) {
     fprintf(logFileptr, " TA %i WTA %.2f", p->TA, WTA);
+    schedulerStats.numFinished += 1;
+    schedulerStats.totalWorkingTime += p->BT;
+    schedulerStats.totalWaitingTime += p->WT;
+    schedulerStats.totalWTA += WTA;
   }
 
   fprintf(logFileptr, "\n");
 
   fclose(logFileptr);
+}
+
+void writePerfFile() {
+  FILE * perfFile = fopen("scheduler.perf", "w");
+
+  if (perfFile == NULL) {
+    perror("Can't open perf file");
+    exit(-1);
+  }
+
+  int finalTime = getClk();
+
+  schedulerStats.CPU_utilization = 100.0 * schedulerStats.totalWorkingTime / finalTime;
+  schedulerStats.avgWTA = (double) schedulerStats.totalWTA / schedulerStats.numFinished;
+  schedulerStats.avgWaitingTime = (double) schedulerStats.totalWaitingTime / schedulerStats.numFinished;
+
+  fprintf(perfFile, "CPU utilization = %.2f%%\n", schedulerStats.CPU_utilization);
+  fprintf(perfFile, "Avg WTA = %.2f\n", schedulerStats.avgWTA);
+  fprintf(perfFile, "Avg Waiting = %.2f\n", schedulerStats.avgWaitingTime);
+  // TODO calculate std deviation
 }
