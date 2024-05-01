@@ -39,6 +39,7 @@ typedef struct perfStats {
   int totalWaitingTime;   // sum of waiting times
   double totalWTA;        // sum of weighted turnaround times
   int numFinished;        // number of finished processes
+  double WTAs[1000];      // to calculate standard deviation (not best solution)
   
   // and these are calculated when the last process finishes
   double CPU_utilization; // = totalWorkingTime / totalTime
