@@ -449,15 +449,17 @@ void startProcess(process_t *process) {
  * @process: pointer to process
  */
 void preemptProcess(process_t *process) {
-  printf(ANSI_GREY "==>SCH: Preempting process with id = %i\n" ANSI_RESET,
-         process->pid);
+  if(process){
+    printf(ANSI_GREY "==>SCH: Preempting process with id = %i\n" ANSI_RESET,
+          process->pid);
 
-  if (process->state == RUNNING) {
-    kill(process->pid, SIGSTOP);
-    process->state = STOPPED;
+    if (process->state == RUNNING) {
+      kill(process->pid, SIGSTOP);
+      process->state = STOPPED;
 
-    // log this
-    logger("stopped", process);
+      // log this
+      logger("stopped", process);
+    }
   }
 }
 
