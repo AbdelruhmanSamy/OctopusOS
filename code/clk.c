@@ -20,6 +20,7 @@ void cleanUpClk(int signum) {
 int main(int argc, char *argv[]) {
   printf(ANSI_YELLOW "==>CLK: Clock starting\n" ANSI_RESET);
   signal(SIGINT, cleanUpClk);
+  signal(SIGTERM, cleanUpClk);
   int clk = 0;
   // Create shared memory for one integer variable 4 bytes
   shmid = shmget(SHKEY, 4, IPC_CREAT | 0644);
