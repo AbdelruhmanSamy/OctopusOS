@@ -13,6 +13,12 @@ void cleanUpScheduler();
 void clearSchResources(int signum);
 
 //===============================
+// Initializing stat variables
+//===============================
+
+void initPerformanceStats();
+
+//===============================
 // Scheduling Algorithms
 //===============================
 void schedule(scheduler_type schType, int quantem, int gen_msgQID);

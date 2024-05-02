@@ -73,6 +73,14 @@ int main(int argc, char *argv[]) {
   return (0);
 }
 
+void initPerformanceStats()
+{
+  stats.numFinished = 0;
+  stats.totalWaitingTime = 0;
+  stats.totalWorkingTime = 0;
+  stats.totalWTA = 0;
+}
+
 /**
  * Schedule - Main loop of scheduler
  *
@@ -88,6 +96,8 @@ void schedule(scheduler_type schType, int quantem, int gen_msgQID) {
   int rQuantem = quantem;
   int quantemClk = 0, currentClk = 0;
   int (*algorithm)(void **readyQ, process_t *newProcess, int *rQuantem);
+
+  initPerformanceStats();
 
   switch (schType) {
   case HPF:
@@ -392,17 +402,14 @@ process_t *createProcess(process_t *process) {
 }
 
 void contextSwitch(process_t *newProcess) {
-  if (!currentProcess) {
+  if (newProcess && newProcess->state == READY) {
     startProcess(newProcess);
-    currentProcess = newProcess;
-    return;
   }
-  if (currentProcess->state == RUNNING && newProcess) {
+  else if (newProcess && newProcess->state == STOPPED) {
     resumeProcess(newProcess);
-    currentProcess = newProcess;
-    return;
   }
-  // TODO Context Switch (print to log file in start and finish)
+    currentProcess = newProcess;
+      // TODO Context Switch (print to log file in start and finish)
   //  When a process finishes (process get SIGTRM)
   //  When a process gets a signal (SIGKILL, SIGINT, SIGSTP, ...etc)
   //  The Switch
@@ -424,10 +431,7 @@ void startProcess(process_t *process) {
   process->WT = getClk() - process->AT;
 
   // log this
-  if (process->state == READY)
     logger("started", process);
-  else if (process->state == STOPPED)
-    logger("resumed", process);
 
   process->state = RUNNING;
 }
@@ -462,7 +466,6 @@ void resumeProcess(process_t *process) {
   if (process->state == STOPPED) {
     kill(process->pid, SIGCONT);
     process->state = RUNNING;
-    process->WT += getClk() - process->LST;
 
     // log this
     logger("resumed", process);
@@ -524,12 +527,6 @@ void createLogFile() {
     perror("Can't Create Log File");
     exit(-1);
   }
-
-  // to initiate performance statistics counters [maybe not the best place to do it]
-  stats.numFinished = 0;
-  stats.totalWaitingTime = 0;
-  stats.totalWorkingTime = 0;
-  stats.totalWTA = 0;
 
   printf("Started Logging\n");
   fclose(logFileptr);
