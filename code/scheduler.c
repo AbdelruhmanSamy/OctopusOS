@@ -402,13 +402,17 @@ process_t *createProcess(process_t *process) {
 }
 
 void contextSwitch(process_t *newProcess) {
-  if (newProcess && newProcess->state == READY) {
-    startProcess(newProcess);
-  }
-  else if (newProcess && newProcess->state == STOPPED) {
-    resumeProcess(newProcess);
-  }
+  if(newProcess){
+
+    if (newProcess->state == READY) {
+      startProcess(newProcess);
+    }
+    else if (newProcess->state == STOPPED) {
+      resumeProcess(newProcess);
+    }
+
     currentProcess = newProcess;
+  }
       // TODO Context Switch (print to log file in start and finish)
   //  When a process finishes (process get SIGTRM)
   //  When a process gets a signal (SIGKILL, SIGINT, SIGSTP, ...etc)
@@ -424,16 +428,19 @@ void contextSwitch(process_t *newProcess) {
  * @process: pointer to process
  */
 void startProcess(process_t *process) {
-  printf(ANSI_BLUE "==>SCH: Starting process with id = %i\n" ANSI_RESET,
-         process->pid);
+  if(process){
+    printf(ANSI_BLUE "==>SCH: Starting process with id = %i\n" ANSI_RESET,
+          process->pid);
 
-  kill(process->pid, SIGCONT);
-  process->WT = getClk() - process->AT;
+    
+    kill(process->pid, SIGCONT);
+    process->state = RUNNING;
 
-  // log this
-    logger("started", process);
+    process->WT = getClk() - process->AT;
 
-  process->state = RUNNING;
+    // log this
+      logger("started", process);
+  }
 }
 
 /**
@@ -442,16 +449,17 @@ void startProcess(process_t *process) {
  * @process: pointer to process
  */
 void preemptProcess(process_t *process) {
-  printf(ANSI_GREY "==>SCH: Preempting process with id = %i\n" ANSI_RESET,
-         process->pid);
+  if(process){
+    printf(ANSI_GREY "==>SCH: Preempting process with id = %i\n" ANSI_RESET,
+          process->pid);
 
-  if (process->state == RUNNING) {
-    kill(process->pid, SIGSTOP);
-    process->state = STOPPED;
-    process->LST = getClk();
+    if (process->state == RUNNING) {
+      kill(process->pid, SIGSTOP);
+      process->state = STOPPED;
 
-    // log this
-    logger("stopped", process);
+      // log this
+      logger("stopped", process);
+    }
   }
 }
 
@@ -460,6 +468,8 @@ void preemptProcess(process_t *process) {
  * @process: pointer to process
  */
 void resumeProcess(process_t *process) {
+if(process){
+
   printf(ANSI_BLUE "==>SCH: Resuming process with id = %i\n" ANSI_RESET,
          process->pid);
 
@@ -470,6 +480,7 @@ void resumeProcess(process_t *process) {
     // log this
     logger("resumed", process);
   }
+}
 }
 
 /**
@@ -563,7 +574,7 @@ void logger(char *msg, process_t *p) {
 }
 
 void writePerfFile() {
-  FILE * perfFile = fopen("scheduler.perf", "w");
+  FILE * perfFile = fopen(PERF_FILE, "w");
 
   if (perfFile == NULL) {
     perror("Can't open perf file");
