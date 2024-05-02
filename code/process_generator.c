@@ -27,10 +27,6 @@ int main(int argc, char *argv[]) {
 
   signal(SIGINT, clearResources);
   signal(SIGTERM, clearResources);
-  if (atexit(cleanUp) != 0) {
-    perror("atexit");
-    exit(1);
-  }
 
   printBanner();
 
@@ -48,13 +44,9 @@ int main(int argc, char *argv[]) {
   sendProcessesToScheduler(processes, msgQID);
   destroyQueue(processes);
 
-  while (wait(NULL) == -1) {
-    perror("wait");
-    exit(1);
-  }
-  // TODO: make wait correctly for the scheduler instead of busy waiting forever
+  wait(NULL);
 
-  destroyClk(true);
+  cleanUp();
 }
 
 /**
@@ -301,10 +293,6 @@ void sendProcessesToScheduler(queue *processes, int msgQID) {
   while (!empty(processes)) {
     process = (process_t *)front(processes);
     currentTime = getClk();
-    if (currentTime == lastTime) {
-      lastTime = currentTime;
-      continue;
-    }
 
     if (currentTime < process->AT) {
       lastTime = currentTime;
@@ -314,7 +302,7 @@ void sendProcessesToScheduler(queue *processes, int msgQID) {
     printf(ANSI_PURPLE "=>GEN:Sending process with id: %d, AT: %d, BT: %d, "
                        "priority: %d to scheduler\n" ANSI_RESET,
            process->id, process->AT, process->BT, process->priority);
-    // TODO: check this initial values later
+
     process->RT = malloc(sizeof(int) * process->BT);
     *process->RT = process->BT;
     process->WT = 0;

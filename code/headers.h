@@ -42,8 +42,8 @@
 
 #define SHKEY 300
 
-#define LOG_FILE "scheduler.log3"
-#define PERF_FILE "scheduler.perf3"
+#define LOG_FILE "scheduler.log"
+#define PERF_FILE "scheduler.perf"
 
 //===============================
 // ARGUMENTS
@@ -97,7 +97,6 @@ void destroyClk(bool terminateAll) {
  * cleanUp - Make necessary cleaning
  */
 void cleanUp() {
-  // TODO any other needed clean up
   destroyClk(true);
   killpg(getpgrp(), SIGINT);
 }
@@ -140,7 +139,7 @@ void up(int semid) {
     perror("Error in up operation");
     exit(-1);
   } else if (DEBUG) {
-    printf("up operation performed sucessfully with semid = %d\n", semid);
+    printf("up operation performed successfully with semid = %d\n", semid);
   }
 }
 
@@ -154,7 +153,7 @@ void down(int semid) {
     perror("Error in down operation");
     exit(-1);
   } else if (DEBUG) {
-    printf("Down operation performed sucessfully of semid = %d\n", semid);
+    printf("Down operation performed successfully of semid = %d\n", semid);
   }
 }
 
@@ -166,9 +165,8 @@ int initSchProShm(int pid) {
     perror("error in creating shared memory\n");
     exit(-1);
   } else if (DEBUG) {
-    printf("shmadd created sucessfully\n");
+    printf("shmadd created successfully\n");
   }
-  fflush(stdout);
 
   return shmid;
 }

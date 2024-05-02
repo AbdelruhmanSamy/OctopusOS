@@ -14,9 +14,7 @@
 #include <assert.h>
 #include <unistd.h>
 
-int msgQID;
 process_t *currentProcess = NULL;
-
 perfStats stats;
 
 /**
@@ -33,10 +31,6 @@ int main(int argc, char *argv[]) {
   signal(SIGINT, clearSchResources);
   signal(SIGTERM, clearSchResources);
   signal(SIGUSR1, sigUsr1Handler);
-  if (atexit(cleanUpScheduler) != 0) {
-    perror("atexit");
-    exit(1);
-  }
 
   initClk();
 
@@ -46,35 +40,14 @@ int main(int argc, char *argv[]) {
            (int)schedulerType);
 
   createLogFile();
-  msgQID = gen_msgQID = initSchGenCom();
+  gen_msgQID = initSchGenCom();
+
   schedule(schedulerType, quantem, gen_msgQID);
-  printf(ANSI_BLUE "==>SCH: Scheduler Finished\n" ANSI_RESET);
 
-  // writePerfFile(); // moved it to the end of schedule() function
-
-  // TODO Initialize Scheduler
-  //  Create Wait queue ??
-  //  Create log file
-  //
-  // TODO Create process when generator tells you it is time
-  //  Setup COM between process and Scheduler (init msgs queue)
-  //
-  // TODO Clear After process termination
-  //  Calculate all needed values (till now)
-  //  Remove process from processes Table (Delete its PCB)
-  //
-  // TODO Clean everything when Scheduler finishes or if it is killed
-  //  Calculate all needed stats
-  //  create pref file
-  //  kill all living processes and destroy its PCB (is this right?)
-  //  destroy process table
-  //  destroy clk
-  //  Any other clean up
   return (0);
 }
 
-void initPerformanceStats()
-{
+void initPerformanceStats() {
   stats.numFinished = 0;
   stats.totalWaitingTime = 0;
   stats.totalWorkingTime = 0;
@@ -120,10 +93,12 @@ void schedule(scheduler_type schType, int quantem, int gen_msgQID) {
   int lastClk = quantemClk;
   while (1) {
     currentClk = getClk();
+
     if (currentClk - quantemClk >= quantem) {
       quantemClk = currentClk;
       rQuantem = 0;
     }
+
     if (currentClk != lastClk) {
       printf(ANSI_GREY "========================================\n" ANSI_RESET);
       printf(ANSI_BLUE "==>SCH: Current Clk = %i\n" ANSI_RESET, currentClk);
@@ -136,19 +111,25 @@ void schedule(scheduler_type schType, int quantem, int gen_msgQID) {
 
     newProcess = NULL;
     if (processesFlag) {
-      if (getProcess(&processesFlag, gen_msgQID, &process))
+      while (getProcess(&processesFlag, gen_msgQID, &process)) {
         newProcess = createProcess(&process);
+        algorithm(&readyQ, newProcess, &rQuantem);
+      }
     }
+    newProcess = NULL;
 
     if (!algorithm(&readyQ, newProcess, &rQuantem) && !processesFlag &&
         !currentProcess)
       break;
 
-    if (rQuantem <= 0)
+    if (rQuantem <= 0) {
+      quantemClk = currentClk;
       rQuantem = quantem;
+    }
 
     lastClk = currentClk;
   }
+
   switch (schType) {
   case HPF:
   case SRTN:
@@ -160,16 +141,12 @@ void schedule(scheduler_type schType, int quantem, int gen_msgQID) {
   default:
     exit(-1);
   }
-  printf(ANSI_BLUE "==>SCH: " ANSI_RED ANSI_BOLD
-                   "All processes are done\n" ANSI_RESET);
 
   writePerfFile();
+  printf(ANSI_BLUE "==>SCH: " ANSI_RED ANSI_BOLD
+                   "Scheduler Finished\n" ANSI_RESET);
 
-  // FIXME: If I exit here it's all sunshines and rainbows
-  //  if I got back to main it gets angry
-  //  something about the stack needs to be fixed
-  //  anyway don't remove this exit
-  exit(0);
+  cleanUpScheduler();
 }
 
 void freeQueueData(void *data) { return; }
@@ -218,8 +195,10 @@ int HPFScheduling(void **readyQueue, process_t *process, int *rQuantem) {
   process_t *newScheduledProcess = NULL;
   (void)rQuantem;
 
-  if (process)
+  if (process) {
     insertMinHeap(readyQ, process);
+    return 1;
+  }
 
   if (!currentProcess && !getMin(*readyQ))
     return 0;
@@ -245,8 +224,10 @@ int SRTNScheduling(void **readyQueue, process_t *process, int *rQuantem) {
   process_t *newScheduledProcess = NULL;
   (void)rQuantem;
 
-  if (process)
+  if (process) {
     insertMinHeap(readyQ, process);
+    return 1;
+  }
 
   if (!currentProcess && !getMin(*readyQ))
     return 0;
@@ -263,9 +244,6 @@ int SRTNScheduling(void **readyQueue, process_t *process, int *rQuantem) {
     contextSwitch(newScheduledProcess);
   }
 
-  // if (!(currentProcess) || currentProcess != (process_t *)getMin(readyQ)) {
-  //   contextSwitch((process_t *)(extractMin(readyQ)));
-  // }
   return 1;
 }
 
@@ -282,16 +260,18 @@ int RRScheduling(void **readyQueue, process_t *process, int *rQuantem) {
   queue **readyQ = (queue **)readyQueue;
   process_t *newScheduledProcess = NULL;
 
-  if (process)
+  if (process) {
     push(*readyQ, process);
+    return 1;
+  }
 
   if (!(currentProcess) && empty(*readyQ))
     return 0;
 
-  if (!currentProcess)
+  if (!currentProcess) {
+    *rQuantem = -1;
     contextSwitch((process_t *)pop(*readyQ));
-
-  if (*rQuantem <= 0) {
+  } else if (*rQuantem <= 0) {
     preemptProcess(currentProcess);
     push(*readyQ, currentProcess);
     currentProcess = NULL;
@@ -402,25 +382,15 @@ process_t *createProcess(process_t *process) {
 }
 
 void contextSwitch(process_t *newProcess) {
-  if(newProcess){
+  if (newProcess) {
+    currentProcess = newProcess;
 
     if (newProcess->state == READY) {
       startProcess(newProcess);
-    }
-    else if (newProcess->state == STOPPED) {
+    } else if (newProcess->state == STOPPED) {
       resumeProcess(newProcess);
     }
-
-    currentProcess = newProcess;
   }
-      // TODO Context Switch (print to log file in start and finish)
-  //  When a process finishes (process get SIGTRM)
-  //  When a process gets a signal (SIGKILL, SIGINT, SIGSTP, ...etc)
-  //  The Switch
-  //    Move old process to ready or wait or (clear after, if it has
-  //    terminated) Save PCB if it still exist (set attributes) Schedule new
-  //    Process (We need the algo here) Load PCB (set attributes) Tell the
-  //    process to start
 }
 
 /**
@@ -428,18 +398,17 @@ void contextSwitch(process_t *newProcess) {
  * @process: pointer to process
  */
 void startProcess(process_t *process) {
-  if(process){
+  if (process) {
     printf(ANSI_BLUE "==>SCH: Starting process with id = %i\n" ANSI_RESET,
-          process->pid);
+           process->pid);
 
-    
     kill(process->pid, SIGCONT);
     process->state = RUNNING;
 
     process->WT = getClk() - process->AT;
 
     // log this
-      logger("started", process);
+    logger("started", process);
   }
 }
 
@@ -449,9 +418,9 @@ void startProcess(process_t *process) {
  * @process: pointer to process
  */
 void preemptProcess(process_t *process) {
-  if(process){
+  if (process) {
     printf(ANSI_GREY "==>SCH: Preempting process with id = %i\n" ANSI_RESET,
-          process->pid);
+           process->pid);
 
     if (process->state == RUNNING) {
       kill(process->pid, SIGSTOP);
@@ -468,28 +437,28 @@ void preemptProcess(process_t *process) {
  * @process: pointer to process
  */
 void resumeProcess(process_t *process) {
-if(process){
+  if (process) {
 
-  printf(ANSI_BLUE "==>SCH: Resuming process with id = %i\n" ANSI_RESET,
-         process->pid);
+    printf(ANSI_BLUE "==>SCH: Resuming process with id = %i\n" ANSI_RESET,
+           process->pid);
 
-  if (process->state == STOPPED) {
-    kill(process->pid, SIGCONT);
-    process->state = RUNNING;
+    if (process->state == STOPPED) {
+      kill(process->pid, SIGCONT);
+      process->state = RUNNING;
 
-    // log this
-    logger("resumed", process);
+      // log this
+      logger("resumed", process);
+    }
   }
-}
 }
 
 /**
  * cleanUpScheduler - Make necessary cleaning
  */
 void cleanUpScheduler() {
-  msgctl(msgQID, IPC_RMID, (struct msqid_ds *)0);
+  msgctl(initSchGenCom(), IPC_RMID, (struct msqid_ds *)0);
+  msgctl(initSchProQ(), IPC_RMID, (struct msqid_ds *)0);
   destroyClk(true);
-  killpg(getpgrp(), SIGINT);
 }
 
 /**
@@ -517,15 +486,10 @@ int initSchProQ() {
 }
 
 void sigUsr1Handler(int signum) {
-  // TODO: write an appropriate implementation for this function
-  // detach the scheduler from the sharedmemory of the rem. time
-  // of this process (the running one)
-
   pid_t killedProcess;
   int status;
+
   killedProcess = wait(&status);
-  printf(ANSI_GREY "==>SCH: Process %d terminated\n" ANSI_RESET, killedProcess);
-  shmctl(initSchProQ(), IPC_RMID, NULL);
   currentProcess->TA = getClk() - currentProcess->AT;
   logger("finished", currentProcess);
   free(currentProcess);
@@ -574,7 +538,7 @@ void logger(char *msg, process_t *p) {
 }
 
 void writePerfFile() {
-  FILE * perfFile = fopen(PERF_FILE, "w");
+  FILE *perfFile = fopen(PERF_FILE, "w");
 
   if (perfFile == NULL) {
     perror("Can't open perf file");
@@ -584,13 +548,14 @@ void writePerfFile() {
   int finalTime = getClk();
 
   stats.CPU_utilization = 100.0 * stats.totalWorkingTime / finalTime;
-  stats.avgWTA = (double) stats.totalWTA / stats.numFinished;
-  stats.avgWaitingTime = (double) stats.totalWaitingTime / stats.numFinished;
+  stats.avgWTA = (double)stats.totalWTA / stats.numFinished;
+  stats.avgWaitingTime = (double)stats.totalWaitingTime / stats.numFinished;
 
   // calculate STD Deviation of Weighted Turn around time
   double sumSquaresErr = 0;
   for (int i = 0; i < stats.numFinished; i++) {
-    sumSquaresErr += (stats.WTAs[i] - stats.avgWTA) * (stats.WTAs[i] - stats.avgWTA);
+    sumSquaresErr +=
+        (stats.WTAs[i] - stats.avgWTA) * (stats.WTAs[i] - stats.avgWTA);
   }
 
   stats.stdWTA = sumSquaresErr / stats.numFinished;

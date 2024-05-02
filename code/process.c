@@ -1,6 +1,4 @@
 #include "headers.h"
-#include "scheduler.h"
-#include "structs.h"
 #include <unistd.h>
 
 int *shmAdd;
@@ -11,7 +9,7 @@ void sigTermHandler(int signum) {
     perror("Error in detach\n");
   } else if (DEBUG) {
     printf(ANSI_GREEN
-           "process %d detached from memory sucessfully\n" ANSI_RESET,
+           "process %d detached from memory successfully\n" ANSI_RESET,
            getpid());
   }
 
@@ -19,46 +17,31 @@ void sigTermHandler(int signum) {
     perror("error in deleting shared memory");
   }
 
-  // FIXME: Samy look at these 2 lines
-  // I added them because process was reaching return 0 and making the exit
-  // cleanup which kills the clock and so the whole app
-  // make sure it doesn't affect the process
   printf(ANSI_GREY "==>process %d: Terminating\n" ANSI_RESET, getpid());
   exit(getpid());
 }
 
 int main(int agrc, char *argv[]) {
 
-  fflush(stdout);
-
-  signal(SIGINT, clearResources);
   signal(SIGTERM, sigTermHandler);
-  // FIXME: commented those because they kill the clock
-  //
-  //  if (atexit(cleanUp) != 0) {
-  //    perror("atexit");
-  //    exit(1);
-  //  }
 
   shmid = initSchProShm(getpid());
   shmAdd = (int *)shmat(shmid, (void *)0, 0);
 
-  fflush(stdout);
   initClk();
 
   printf(ANSI_TEAL "==>process %d: Started\n" ANSI_RESET, getpid());
 
-  int preTime = getClk();
+  int currTime = getClk();
+  int preTime = currTime;
   while (*shmAdd > 0) {
-    int currTime = getClk();
 
     if (currTime != preTime) {
       preTime = currTime;
-
-      // printf(ANSI_TEAL "==>process %d: RT = %d \n" ANSI_RESET, getpid(),
-      // *shmAdd);
       (*shmAdd)--;
     }
+
+    currTime = getClk();
   }
 
   kill(getppid(), SIGUSR1);
