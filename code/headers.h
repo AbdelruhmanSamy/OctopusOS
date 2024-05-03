@@ -111,6 +111,10 @@ void clearResources(int signum) {
   exit(0);
 }
 
+//===============================
+// IPC Functions
+//===============================
+
 /**
  * intiSchGenCom - Initializes the message queue between the scheduler and the
  * process generator.
@@ -170,3 +174,33 @@ int initSchProShm(int pid) {
 
   return shmid;
 }
+
+
+int initSchProQ() {
+  int id = ftok("keyfiles/PRO_SCH_Q", SCH_PRO_COM);
+  int q_id = msgget(id, IPC_CREAT | 0666);
+
+  if (q_id == -1) {
+    perror("error in creating msg queue between process & scheduler");
+    exit(-1);
+  } else if (DEBUG) {
+    printf("Message queue created successfully with pid = %d\n", q_id);
+  }
+
+  return q_id;
+}
+
+int initSchProSem()
+{
+  int id = ftok("keyfiles/PRO_SCH_SEM", SCH_PRO_COM);
+  int semid = semget(id, 1, 0666 | IPC_CREAT);
+  
+  if (semid == -1){
+    perror("Error in create sem\n");
+    exit(-1);
+  }
+  
+
+  return semid;
+}
+
