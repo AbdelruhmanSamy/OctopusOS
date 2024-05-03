@@ -44,9 +44,8 @@ void resumeProcess(process_t *process);
 //===============================
 // IPC Functions
 //===============================
-// TODO: create a queue between scheduler and all processes to be able to signal
-// it's termination
-int initSchProQ();
+int getRemTime(process_t* p);
+void setRemTime(process_t* p , int val);
 void sigUsr1Handler(int signum);
 
 //==============================

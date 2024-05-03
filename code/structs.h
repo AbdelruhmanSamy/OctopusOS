@@ -20,15 +20,16 @@ typedef struct process {
   int LST;      // Last Stop time (last time the process was stopped)
                 //   used to calculate the waiting time
   int *RT;      // remaining time
+  // int RTSemid;  // id of the semaphor used to access this process  
   int TA;       // turnaround time
 } process_t;
 
-union SemUn {
+typedef union SemUn {
   int val;               /* Value for SETVAL */
   struct semid_ds *buf;  /* Buffer for IPC_STAT, IPC_SET */
   unsigned short *array; /* Array for GETALL, SETALL */
   struct seminfo *__buf; /* Buffer for IPC_INFO (Linux-specific) */
-};
+} SemUn;
 
 // To create scheduler.perf.
 // The scheduler will create only one instant from this struct
