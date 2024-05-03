@@ -1,11 +1,11 @@
 #include "headers.h"
 #include <unistd.h>
 
-int *shmAdd;
+int *RT;
 int shmid;
-
+int semid;
 void sigTermHandler(int signum) {
-  if (shmdt(shmAdd) == -1) {
+  if (shmdt(RT) == -1) {
     perror("Error in detach\n");
   } else if (DEBUG) {
     printf(ANSI_GREEN
@@ -25,20 +25,33 @@ int main(int agrc, char *argv[]) {
 
   signal(SIGTERM, sigTermHandler);
 
+  // initailizing remaining time shared memory
   shmid = initSchProShm(getpid());
-  shmAdd = (int *)shmat(shmid, (void *)0, 0);
+  RT = (int *)shmat(shmid, (void *)0, 0);
 
+  semid = initSchProSem();
+  
   initClk();
 
   printf(ANSI_TEAL "==>process %d: Started\n" ANSI_RESET, getpid());
 
   int currTime = getClk();
   int preTime = currTime;
-  while (*shmAdd > 0) {
+
+  down(semid);
+  int val = *RT;
+  up(semid);
+
+  while (val > 0) {
 
     if (currTime != preTime) {
       preTime = currTime;
-      (*shmAdd)--;
+      
+      down(semid);
+      (*RT)--;
+      val = *RT;
+      up(semid);
+      
     }
 
     currTime = getClk();
