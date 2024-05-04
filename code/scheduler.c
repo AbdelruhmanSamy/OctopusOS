@@ -17,6 +17,9 @@
 process_t *currentProcess = NULL;
 perfStats stats;
 int semid;
+
+bool started;
+bool terminated;
 /**
  * main - The main function of the scheduler.
  *
@@ -98,6 +101,10 @@ void schedule(scheduler_type schType, int quantem, int gen_msgQID) {
 
   quantemClk = getClk();
   int lastClk = quantemClk;
+  started = 0;
+  terminated = 0;
+  bool WasRunning = 0;
+
   while (1) {
     currentClk = getClk();
 
@@ -110,13 +117,24 @@ void schedule(scheduler_type schType, int quantem, int gen_msgQID) {
       printf(ANSI_GREY "========================================\n" ANSI_RESET);
       printf(ANSI_BLUE "==>SCH: Current Clk = %i\n" ANSI_RESET, currentClk);
 
+      if(started || WasRunning){
+        stats.totalWorkingTime++;
+      }
+
+      started =0;
+      terminated =0;
+
       if (currentProcess) {
+        WasRunning = 1;
         int remTime = getRemTime(currentProcess);
         if(remTime > 0){
           printf(ANSI_BLUE "==>SCH:" ANSI_GREEN " Process %d " ANSI_BOLD
                           "RT = %i\n" ANSI_RESET,
                 currentProcess->id, remTime);
         }
+      }
+      else{
+        WasRunning = 0;
       }
     }
 
@@ -136,6 +154,10 @@ void schedule(scheduler_type schType, int quantem, int gen_msgQID) {
     if (rQuantem <= 0) {
       quantemClk = currentClk;
       rQuantem = quantem;
+    }
+
+    if(currentClk!=lastClk){
+
     }
 
     lastClk = currentClk;
@@ -420,6 +442,7 @@ void startProcess(process_t *process) {
 
     process->WT = getClk() - process->AT;
 
+    started =1;
     // log this
     logger("started", process);
     kill(process->pid, SIGCONT);
@@ -460,6 +483,8 @@ void resumeProcess(process_t *process) {
       kill(process->pid, SIGCONT);
       process->state = RUNNING;
 
+      started =1;
+
       // log this
       logger("resumed", process);
     }
@@ -492,6 +517,8 @@ void sigUsr1Handler(int signum) {
   int status;
   killedProcess = wait(&status);
   
+  terminated = 1;
+
   currentProcess->TA = getClk() - currentProcess->AT;
   logger("finished", currentProcess);
 
@@ -533,7 +560,6 @@ void logger(char *msg, process_t *p) {
     fprintf(logFileptr, " TA %i WTA %.2f", p->TA, WTA);
     stats.WTAs[stats.numFinished] = WTA;
     stats.numFinished += 1;
-    stats.totalWorkingTime += p->BT;
     stats.totalWaitingTime += p->WT;
     stats.totalWTA += WTA;
   }
