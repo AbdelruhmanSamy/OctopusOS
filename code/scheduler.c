@@ -101,6 +101,7 @@ void schedule(scheduler_type schType, int quantem, int gen_msgQID) {
 
   quantemClk = getClk();
   int lastClk = quantemClk;
+
   started = 0;
   terminated = 0;
   bool WasRunning = 0;
@@ -156,9 +157,6 @@ void schedule(scheduler_type schType, int quantem, int gen_msgQID) {
       rQuantem = quantem;
     }
 
-    if(currentClk!=lastClk){
-
-    }
 
     lastClk = currentClk;
   }
