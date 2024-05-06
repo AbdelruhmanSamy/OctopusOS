@@ -1,4 +1,6 @@
 #pragma once
+#ifndef HEADERS_H
+#define HEADERS_H
 
 #include <errno.h>
 #include <signal.h>
@@ -45,9 +47,6 @@
 #define LOG_FILE "scheduler.log"
 #define MEMORY_FILE "memory.log"
 #define PERF_FILE "scheduler.perf"
-
-#define TOTAL_MEMORY_SIZE 1024
-#define MAX_PROCESS_SIZE 256
 
 //===============================
 // ARGUMENTS
@@ -204,3 +203,4 @@ int initSchProSem() {
 
   return semid;
 }
+#endif
