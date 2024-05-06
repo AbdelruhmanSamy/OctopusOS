@@ -73,12 +73,12 @@ void schedule(scheduler_type schType, int quantem, int gen_msgQID) {
   int quantemClk = 0, currentClk = 0;
   int (*algorithm)(void **readyQ, process_t *newProcess, int *rQuantem);
 
-  semid = initSchProSem();   //initializing semaphor to control RT shared mem.
+  semid = initSchProSem(); // initializing semaphor to control RT shared mem.
   SemUn semun;
   semun.val = 1;
-  if (semctl(semid, 0, SETVAL, semun) == -1){   
-        perror("Error in semctl");
-        exit(-1);
+  if (semctl(semid, 0, SETVAL, semun) == -1) {
+    perror("Error in semctl");
+    exit(-1);
   }
 
   initPerformanceStats();
@@ -118,23 +118,22 @@ void schedule(scheduler_type schType, int quantem, int gen_msgQID) {
       printf(ANSI_GREY "========================================\n" ANSI_RESET);
       printf(ANSI_BLUE "==>SCH: Current Clk = %i\n" ANSI_RESET, currentClk);
 
-      if(started || WasRunning){
+      if (started || WasRunning) {
         stats.totalWorkingTime++;
       }
 
-      started =0;
-      terminated =0;
+      started = 0;
+      terminated = 0;
 
       if (currentProcess) {
         WasRunning = 1;
         int remTime = getRemTime(currentProcess);
-        if(remTime > 0){
+        if (remTime > 0) {
           printf(ANSI_BLUE "==>SCH:" ANSI_GREEN " Process %d " ANSI_BOLD
-                          "RT = %i\n" ANSI_RESET,
-                currentProcess->id, remTime);
+                           "RT = %i\n" ANSI_RESET,
+                 currentProcess->id, remTime);
         }
-      }
-      else{
+      } else {
         WasRunning = 0;
       }
     }
@@ -156,7 +155,6 @@ void schedule(scheduler_type schType, int quantem, int gen_msgQID) {
       quantemClk = currentClk;
       rQuantem = quantem;
     }
-
 
     lastClk = currentClk;
   }
@@ -205,9 +203,9 @@ int compareHPF(void *e1, void *e2) {
  * Return: 1 if e2 Remaining Time is less, -1 if e1 is less, 0 if they are equal
  */
 int compareSRTN(void *e1, void *e2) {
-  if(getRemTime((process_t *)e1) < getRemTime((process_t *)e2))
+  if (getRemTime((process_t *)e1) < getRemTime((process_t *)e2))
     return -1;
-  if(getRemTime((process_t *)e1) > getRemTime((process_t *)e2))
+  if (getRemTime((process_t *)e1) > getRemTime((process_t *)e2))
     return 1;
   return 0;
 }
@@ -403,15 +401,14 @@ process_t *createProcess(process_t *process) {
   // printf(ANSI_BLUE "==>SCH: Created process with id = %i\n" ANSI_RESET,
   // newProcess->pid);
 
-  //initilizing RT shared mem.
+  // initilizing RT shared mem.
   int shmid = initSchProShm(pid);
   int *shmAdd = (int *)shmat(shmid, (void *)0, 0);
 
-  
   newProcess->RT = shmAdd;
 
-  setRemTime(newProcess , process->BT);
-  
+  setRemTime(newProcess, process->BT);
+
   return newProcess;
 }
 
@@ -440,9 +437,11 @@ void startProcess(process_t *process) {
 
     process->WT = getClk() - process->AT;
 
-    started =1;
+    started = 1;
     // log this
     logger("started", process);
+    // TODO: Allocate memory and log it
+    // Print pretty memory output/
     kill(process->pid, SIGCONT);
   }
 }
@@ -481,7 +480,7 @@ void resumeProcess(process_t *process) {
       kill(process->pid, SIGCONT);
       process->state = RUNNING;
 
-      started =1;
+      started = 1;
 
       // log this
       logger("resumed", process);
@@ -494,9 +493,9 @@ void resumeProcess(process_t *process) {
  */
 void cleanUpScheduler() {
   msgctl(initSchGenCom(), IPC_RMID, (struct msqid_ds *)0);
-  
-    //deleting semaphor 
-  semctl(semid , 1 , IPC_RMID);
+
+  // deleting semaphor
+  semctl(semid, 1, IPC_RMID);
   destroyClk(true);
 }
 
@@ -514,17 +513,20 @@ void sigUsr1Handler(int signum) {
   pid_t killedProcess;
   int status;
   killedProcess = wait(&status);
-  
+
   terminated = 1;
 
   currentProcess->TA = getClk() - currentProcess->AT;
   logger("finished", currentProcess);
+  // TODO: Free memory here and log it
+  // Print pretty memory output
 
-  if(currentProcess)    //FIXME: added to avoid double freeing currentProcess pointer (however it's expected to be unfreed *isn't this true?*)
+  if (currentProcess) // FIXME: added to avoid double freeing currentProcess
+                      // pointer (however it's expected to be unfreed *isn't
+                      // this true?*)
     free(currentProcess);
   currentProcess = NULL;
 }
-
 
 void createLogFile() {
   FILE *logFileptr = fopen(LOG_FILE, "w");
@@ -548,7 +550,6 @@ void logger(char *msg, process_t *p) {
   }
   int clk = getClk();
   float WTA = p->TA / (float)p->BT;
-
 
   fprintf(logFileptr,
           "At time %i process %i %s arr %i total %i remain %i wait %i", clk,
@@ -596,7 +597,7 @@ void writePerfFile() {
   fprintf(perfFile, "Std WTA = %.2f\n", stats.stdWTA);
 }
 
-int getRemTime(process_t* p){  
+int getRemTime(process_t *p) {
   down(semid);
   int val = *(p->RT);
   up(semid);
@@ -604,8 +605,8 @@ int getRemTime(process_t* p){
   return val;
 }
 
-void setRemTime(process_t* p ,int val){
+void setRemTime(process_t *p, int val) {
   down(semid);
-    *(p->RT) = val;
+  *(p->RT) = val;
   up(semid);
 }
