@@ -1,4 +1,6 @@
 #pragma once
+#ifndef SCHEDULER_H
+#define SCHEDULER_H
 
 #include "list.h"
 #include "minHeap.h"
@@ -44,8 +46,8 @@ void resumeProcess(process_t *process);
 //===============================
 // IPC Functions
 //===============================
-int getRemTime(process_t* p);
-void setRemTime(process_t* p , int val);
+int getRemTime(process_t *p);
+void setRemTime(process_t *p, int val);
 void sigUsr1Handler(int signum);
 
 //==============================
@@ -53,5 +55,7 @@ void sigUsr1Handler(int signum);
 //==============================
 
 void createLogFile();
-void logger(char * action, process_t* process_pcb);
+void logger(char *action, process_t *process_pcb);
 void writePerfFile();
+
+#endif
