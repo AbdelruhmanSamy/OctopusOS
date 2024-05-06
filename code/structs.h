@@ -20,8 +20,10 @@ typedef struct process {
   int LST;      // Last Stop time (last time the process was stopped)
                 //   used to calculate the waiting time
   int *RT;      // remaining time
-  // int RTSemid;  // id of the semaphor used to access this process  
   int TA;       // turnaround time
+
+  // MEMORY MANAGEMENT
+  int memsize; // size of the memory required by the process
 } process_t;
 
 typedef union SemUn {
@@ -34,14 +36,14 @@ typedef union SemUn {
 // To create scheduler.perf.
 // The scheduler will create only one instant from this struct
 typedef struct perfStats {
-  
+
   // these are incrementally updated each time a process finishes
-  int totalWorkingTime;   // sum of burst times
-  int totalWaitingTime;   // sum of waiting times
-  double totalWTA;        // sum of weighted turnaround times
-  int numFinished;        // number of finished processes
-  double WTAs[1000];      // to calculate standard deviation (not best solution)
-  
+  int totalWorkingTime; // sum of burst times
+  int totalWaitingTime; // sum of waiting times
+  double totalWTA;      // sum of weighted turnaround times
+  int numFinished;      // number of finished processes
+  double WTAs[1000];    // to calculate standard deviation (not best solution)
+
   // and these are calculated when the last process finishes
   double CPU_utilization; // = totalWorkingTime / totalTime
   double avgWaitingTime;  // totalWaitingTime / N

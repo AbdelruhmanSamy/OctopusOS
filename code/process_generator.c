@@ -77,13 +77,14 @@ queue *readInputFile() {
       continue;
     }
     process_t *newProcess = malloc(sizeof(process_t));
-    sscanf(line, "%d %d %d %d", &newProcess->id, &newProcess->AT,
-           &newProcess->BT, &newProcess->priority);
+    sscanf(line, "%d %d %d %d %d", &newProcess->id, &newProcess->AT,
+           &newProcess->BT, &newProcess->priority, &newProcess->memsize);
     push(processes, newProcess);
-    printf(ANSI_PURPLE "=>Inserted process with id: %d, AT: %d, BT: %d, "
-                       "priority: %d into processes queue\n" ANSI_RESET,
-           newProcess->id, newProcess->AT, newProcess->BT,
-           newProcess->priority);
+    printf(ANSI_PURPLE
+           "=>Inserted process with id: %d, AT: %d, BT: %d, "
+           "priority: %d, memsize: %d into processes queue\n" ANSI_RESET,
+           newProcess->id, newProcess->AT, newProcess->BT, newProcess->priority,
+           newProcess->memsize);
     // free(line);
   }
 
@@ -300,8 +301,9 @@ void sendProcessesToScheduler(queue *processes, int msgQID) {
     }
 
     printf(ANSI_PURPLE "=>GEN:Sending process with id: %d, AT: %d, BT: %d, "
-                       "priority: %d to scheduler\n" ANSI_RESET,
-           process->id, process->AT, process->BT, process->priority);
+                       "priority: %d, memzie: %d to scheduler\n" ANSI_RESET,
+           process->id, process->AT, process->BT, process->priority,
+           process->memsize);
 
     process->RT = malloc(sizeof(int) * process->BT);
     *process->RT = process->BT;
