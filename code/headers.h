@@ -43,7 +43,11 @@
 #define SHKEY 300
 
 #define LOG_FILE "scheduler.log"
+#define MEMORY_FILE "memory.log"
 #define PERF_FILE "scheduler.perf"
+
+#define TOTAL_MEMORY_SIZE 1024
+#define MAX_PROCESS_SIZE 256
 
 //===============================
 // ARGUMENTS
@@ -175,7 +179,6 @@ int initSchProShm(int pid) {
   return shmid;
 }
 
-
 int initSchProQ() {
   int id = ftok("keyfiles/PRO_SCH_Q", SCH_PRO_COM);
   int q_id = msgget(id, IPC_CREAT | 0666);
@@ -190,17 +193,14 @@ int initSchProQ() {
   return q_id;
 }
 
-int initSchProSem()
-{
+int initSchProSem() {
   int id = ftok("keyfiles/PRO_SCH_SEM", SCH_PRO_COM);
   int semid = semget(id, 1, 0666 | IPC_CREAT);
-  
-  if (semid == -1){
+
+  if (semid == -1) {
     perror("Error in create sem\n");
     exit(-1);
   }
-  
 
   return semid;
 }
-
