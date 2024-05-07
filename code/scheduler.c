@@ -585,10 +585,11 @@ void writePerfFile() {
   double sumSquaresErr = 0;
   for (int i = 0; i < stats.numFinished; i++) {
     sumSquaresErr +=
-        (stats.WTAs[i] - stats.avgWTA) * (stats.WTAs[i] - stats.avgWTA);
+        pow(stats.WTAs[i] - stats.avgWTA, 2);
   }
 
   stats.stdWTA = sumSquaresErr / stats.numFinished;
+  stats.stdWTA = sqrt(stats.stdWTA);
 
   fprintf(perfFile, "CPU utilization = %.2f%%\n", stats.CPU_utilization);
   fprintf(perfFile, "Avg WTA = %.2f\n", stats.avgWTA);

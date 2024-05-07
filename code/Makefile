@@ -5,7 +5,7 @@ all: build run
 build:
 	gcc list.c queue.c process_generator.c -o process_generator.out
 	gcc clk.c -o clk.out
-	gcc list.c queue.c minHeap.c scheduler.c -o scheduler.out
+	gcc list.c queue.c minHeap.c scheduler.c -o scheduler.out -lm
 	gcc list.c process.c -o process.out
 	gcc test_generator.c -o test_generator.out
 
