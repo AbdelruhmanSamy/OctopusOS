@@ -116,3 +116,38 @@ memory_block_t *allocateMemory(memory_block_t *root, int size, int processId) {
   return NULL;
 }
 
+/**
+ * freeMemory - Free memory for a process
+ *
+ * @param root - The root of the memory block
+ * @param processId - The process ID
+ */
+void freeMemory(memory_block_t *root, int processId) {
+  if (root == NULL)
+    return;
+
+  if (root->processId == processId) {
+    // remove me from tree
+    if (root == root->parent->left) {
+      root->parent->left = NULL;
+    } else {
+      root->parent->right = NULL;
+    }
+
+    root = root->parent;
+    while (!root->left && !root->right && root->parent) {
+      memory_block_t *parent = root->parent;
+      if (parent->left == root) {
+        parent->left = NULL;
+      } else {
+        parent->right = NULL;
+      }
+      root = parent;
+    }
+
+    return;
+  }
+
+  freeMemory(root->left, processId);
+  freeMemory(root->right, processId);
+}
