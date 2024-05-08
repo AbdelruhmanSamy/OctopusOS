@@ -243,3 +243,105 @@ void fancyPrintMemoryBar(memory_block_t *root) {
   printf(ANSI_RESET);
   printf("\n");
 }
+
+/**
+ * createMemoryLogFile - Create the memory log file
+ */
+void createMemoryLogFile() {
+  FILE *logFileptr = fopen(LOG_FILE, "w");
+  if (logFileptr == NULL) {
+    perror("Can't Create Log File");
+    exit(-1);
+  }
+
+  printf("Started Logging\n");
+  fclose(logFileptr);
+}
+
+/**
+ * memoryLogger - Log the memory allocation
+ *
+ * @param time - The time
+ * @param message - The message
+ * @param processId - The process ID
+ * @param size - The size of the memory block
+ * @param start - The start address of the memory block
+ * @param end - The end address of the memory block
+ */
+void memoryLogger(int time, const char *message, int processId, int size,
+                  int start, int end) {
+  FILE *file = fopen(LOG_FILE, "a");
+  if (file == NULL)
+    return;
+
+  if (strcmp(message, "Allocated") == 0)
+    fprintf(file, "At time %d %s %d bytes for process %d from %d to %d\n", time,
+            message, size, processId, start, end);
+  else
+    fprintf(file, "At time %d %s %d bytes from process %d from %d to %d\n",
+            time, message, size, processId, start, end);
+
+  fclose(file);
+}
+
+int main() {
+  createMemoryLogFile();
+  memory_block_t *memory = initMemory();
+  printf("Memory block size: %d\n", memory->size);
+  fancyPrintTree(memory, 0);
+  printf("\n");
+  allocateMemory(memory, 256, 1);
+  memoryLogger(0, "Allocated", 1, 256, 0, 256);
+  memoryLogger(2, "freed", 1, 256, 0, 256);
+  allocateMemory(memory, 32, 2);
+  allocateMemory(memory, 64, 3);
+  allocateMemory(memory, 128, 3);
+
+  allocateMemory(memory, 256, 4);
+  allocateMemory(memory, 40, 5);
+  allocateMemory(memory, 40, 6);
+  allocateMemory(memory, 8, 9);
+  fancyPrintTree(memory, 0);
+
+  printf("\n");
+  fancyPrintMemoryBar(memory);
+
+  freeMemory(memory, 4);
+  fancyPrintTree(memory, 0);
+  printf("\n");
+  fancyPrintMemoryBar(memory);
+  freeMemory(memory, 3);
+  fancyPrintTree(memory, 0);
+  printf("\n");
+  fancyPrintMemoryBar(memory);
+  freeMemory(memory, 1);
+  fancyPrintTree(memory, 0);
+  printf("\n");
+  fancyPrintMemoryBar(memory);
+  freeMemory(memory, 9);
+  fancyPrintTree(memory, 0);
+  printf("\n");
+  fancyPrintMemoryBar(memory);
+  freeMemory(memory, 2);
+  fancyPrintTree(memory, 0);
+  printf("\n");
+  fancyPrintMemoryBar(memory);
+  freeMemory(memory, 5);
+  freeMemory(memory, 6);
+  fancyPrintTree(memory, 0);
+  printf("\n");
+  fancyPrintMemoryBar(memory);
+  allocateMemory(memory, 256, 1);
+  allocateMemory(memory, 32, 2);
+  allocateMemory(memory, 64, 3);
+  allocateMemory(memory, 128, 3);
+
+  allocateMemory(memory, 256, 4);
+  allocateMemory(memory, 40, 5);
+  allocateMemory(memory, 40, 6);
+  allocateMemory(memory, 8, 9);
+  fancyPrintTree(memory, 0);
+  printf("\n");
+  fancyPrintMemoryBar(memory);
+  return 0;
+}

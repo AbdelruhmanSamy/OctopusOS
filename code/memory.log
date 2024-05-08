@@ -1,0 +1,2 @@
+At time 0 Allocated 256 bytes for process 1 from 0 to 256
+At time 2 freed 256 bytes from process 1 from 0 to 256
