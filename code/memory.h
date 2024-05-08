@@ -4,14 +4,19 @@
 /**
  * memory_block_t
  * A struct to represent a memory block in the memory
- * size: the size of the memory block
- * isFree: a flag to indicate if the memory block is free or not
- * buddy: a pointer to the buddy of the memory block
  */
 typedef struct memory_block {
   int size;
+  int realSize;
+  int start;
+  int end;
+  int processId;
   int isFree;
-  struct memory_block *buddy;
+
+  // tree like pointers
+  struct memory_block *parent;
+  struct memory_block *left;
+  struct memory_block *right;
 } memory_block_t;
 
 // internal functions
