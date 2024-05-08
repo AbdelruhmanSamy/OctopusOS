@@ -22,6 +22,9 @@ typedef struct memory_block {
 // internal functions
 memory_block_t *findFreeBlock(int size);
 void mergeBuddies(memory_block_t *block);
+memory_block_t *initMemory();
+memory_block_t *allocateMemory(memory_block_t *root, int size, int processId);
+void freeMemory(memory_block_t *root, int processId);
 
 // output functions
 void memoryLogger(int time, const char *message, int processId, int size,
