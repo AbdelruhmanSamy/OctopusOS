@@ -1,10 +1,12 @@
 #include "memory.h"
+#include <math.h>
+#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #define TOTAL_MEMORY_SIZE 1024
-#define MAX_PROCESS_SIZE 256
+#define LOG_FILE "memory.log"
 
-memory_block_t *memory = NULL;
 /**
  * highestPowerOf2 - Find the highest power of 2 that is less than or equal to x
  *
@@ -150,4 +152,94 @@ void freeMemory(memory_block_t *root, int processId) {
 
   freeMemory(root->left, processId);
   freeMemory(root->right, processId);
+}
+
+/**
+ * findMemoryBlock - Find a memory block by address used by printing
+ *
+ * @param root - The root of the memory block
+ * @param addr - The address
+ * @return memory_block_t* - The memory block
+ */
+memory_block_t *findMemoryBlock(memory_block_t *root, int addr) {
+  if (root == NULL)
+    return NULL;
+
+  if (!root->left && !root->right && addr >= root->start && addr < root->end)
+    return root;
+
+  memory_block_t *left = findMemoryBlock(root->left, addr);
+  if (left != NULL)
+    return left;
+
+  return findMemoryBlock(root->right, addr);
+}
+
+/**
+ * fancyPrintTree - Print the memory layout in a fancy way
+ *
+ * @param root - The root of the memory block
+ * @param level - The level of the memory block
+ */
+void fancyPrintTree(memory_block_t *root, int level) {
+  if (root == NULL)
+    return;
+
+  printf("%s", root->isFree ? ANSI_GREEN : ANSI_RED);
+
+  for (int i = 0; i < level; i++)
+    printf("|  ");
+
+  printf("[%d-%d] %s - Process ID: %d\n", root->start, root->end,
+         root->isFree ? "Free" : "Allocated", root->processId);
+
+  printf(ANSI_RESET);
+
+  fancyPrintTree(root->left, level + 1);
+  fancyPrintTree(root->right, level + 1);
+}
+
+/**
+ * fancyPrintMemoryBar - Display the memory layout
+ *
+ * @param root - The root of the memory block
+ */
+void fancyPrintMemoryBar(memory_block_t *root) {
+  if (root == NULL)
+    return;
+
+  printf(ANSI_BLACK);
+  for (int addr = 0; addr < 1024; addr += 8) {
+    memory_block_t *block = findMemoryBlock(root, addr);
+    if (block != NULL && !block->isFree) {
+      switch (block->processId % 6) {
+      case 0:
+        printf(ANSI_RED_BG);
+        break;
+      case 1:
+        printf(ANSI_GREEN_BG);
+        break;
+      case 2:
+        printf(ANSI_YELLOW_BG);
+        break;
+      case 3:
+        printf(ANSI_BLUE_BG);
+        break;
+      case 4:
+        printf(ANSI_MAGENTA_BG);
+        break;
+      case 5:
+        printf(ANSI_CYAN_BG);
+        break;
+      default:
+        printf(ANSI_RED_BG);
+        break;
+      }
+      printf("%d", block->processId);
+    } else {
+      printf(ANSI_WHITE_BG " ");
+    }
+  }
+  printf(ANSI_RESET);
+  printf("\n");
 }
