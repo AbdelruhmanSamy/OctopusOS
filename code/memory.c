@@ -176,6 +176,28 @@ memory_block_t *findMemoryBlock(memory_block_t *root, int addr) {
 }
 
 /**
+ * findMemoryBlockByProcessId - Find a memory block by process ID
+ *
+ * @param root - The root of the memory block
+ * @param processId - The process ID
+ * @return memory_block_t* - The memory block
+ */
+memory_block_t *findMemoryBlockByProcessId(memory_block_t *root,
+                                           int processId) {
+  if (root == NULL)
+    return NULL;
+
+  if (root->processId == processId)
+    return root;
+
+  memory_block_t *left = findMemoryBlockByProcessId(root->left, processId);
+  if (left != NULL)
+    return left;
+
+  return findMemoryBlockByProcessId(root->right, processId);
+}
+
+/**
  * fancyPrintTree - Print the memory layout in a fancy way
  *
  * @param root - The root of the memory block
@@ -261,18 +283,21 @@ void createMemoryLogFile() {
 /**
  * memoryLogger - Log the memory allocation
  *
+ * @param root - The root of the memory block
  * @param time - The time
  * @param message - The message
  * @param processId - The process ID
  * @param size - The size of the memory block
- * @param start - The start address of the memory block
- * @param end - The end address of the memory block
  */
-void memoryLogger(int time, const char *message, int processId, int size,
-                  int start, int end) {
+void memoryLogger(memory_block_t *root, int time, const char *message,
+                  int processId, int size) {
   FILE *file = fopen(LOG_FILE, "a");
   if (file == NULL)
     return;
+
+  memory_block_t *block = findMemoryBlockByProcessId(root, processId);
+  int start = block->start;
+  int end = block->end;
 
   if (strcmp(message, "Allocated") == 0)
     fprintf(file, "At time %d %s %d bytes for process %d from %d to %d\n", time,

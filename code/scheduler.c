@@ -8,6 +8,7 @@
 
 #include "scheduler.h"
 #include "headers.h"
+#include "memory.h"
 #include "minHeap.h"
 #include "queue.h"
 #include "structs.h"
@@ -15,6 +16,7 @@
 #include <unistd.h>
 
 process_t *currentProcess = NULL;
+memory_block_t *memory = NULL;
 perfStats stats;
 int semid;
 
@@ -72,6 +74,12 @@ void schedule(scheduler_type schType, int quantem, int gen_msgQID) {
   int rQuantem = quantem;
   int quantemClk = 0, currentClk = 0;
   int (*algorithm)(void **readyQ, process_t *newProcess, int *rQuantem);
+
+  // initializing memory
+  memory = initMemory();
+  createMemoryLogFile();
+  fancyPrintTree(memory, 0);
+  fancyPrintMemoryBar(memory);
 
   semid = initSchProSem(); // initializing semaphor to control RT shared mem.
   SemUn semun;
@@ -442,6 +450,11 @@ void startProcess(process_t *process) {
     logger("started", process);
     // TODO: Allocate memory and log it
     // Print pretty memory output/
+    allocateMemory(memory, process->memsize, process->id);
+    if (DETAIL_MEM)
+      fancyPrintTree(memory, 0);
+    fancyPrintMemoryBar(memory);
+    memoryLogger(memory, getClk(), "Allocated", process->id, process->memsize);
     kill(process->pid, SIGCONT);
   }
 }
@@ -520,7 +533,12 @@ void sigUsr1Handler(int signum) {
   logger("finished", currentProcess);
   // TODO: Free memory here and log it
   // Print pretty memory output
-
+  memoryLogger(memory, getClk(), "Freed", currentProcess->id,
+               currentProcess->memsize);
+  freeMemory(memory, currentProcess->id);
+  if (DETAIL_MEM)
+    fancyPrintTree(memory, 0);
+  fancyPrintMemoryBar(memory);
   if (currentProcess) // FIXME: added to avoid double freeing currentProcess
                       // pointer (however it's expected to be unfreed *isn't
                       // this true?*)

@@ -53,6 +53,7 @@
 //===============================
 const int DEBUG = false; // set to true to enable debug prints
 const int DELAY = false; // set to true to add delay
+const int DETAIL_MEM = true;
 
 ///==============================
 // don't mess with this variable//
