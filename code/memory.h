@@ -21,6 +21,7 @@ typedef struct memory_block {
 int highestPowerOf2(int x);
 memory_block_t *initializeMemoryBlock(int size, int start, int end);
 memory_block_t *findMemoryBlock(memory_block_t *root, int addr);
+memory_block_t *findMemoryBlockByProcessId(memory_block_t *root, int processId);
 
 // API
 memory_block_t *initMemory();
@@ -29,8 +30,8 @@ void freeMemory(memory_block_t *root, int processId);
 
 // output functions
 void createMemoryLogFile();
-void memoryLogger(int time, const char *message, int processId, int size,
-                  int start, int end);
+void memoryLogger(memory_block_t *root, int time, const char *message,
+                  int processId, int size);
 void fancyPrintTree(memory_block_t *root, int level);
 void fancyPrintMemoryBar(memory_block_t *root);
 
