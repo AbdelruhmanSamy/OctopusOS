@@ -13,7 +13,11 @@
 #include "queue.h"
 #include "structs.h"
 #include <assert.h>
+#include <raylib.h>
 #include <unistd.h>
+
+#define RAYGUI_IMPLEMENTATION
+#include "./GUI/raygui.h"
 
 process_t *currentProcess = NULL;
 memory_block_t *memory = NULL;
@@ -36,6 +40,10 @@ int main(int argc, char *argv[]) {
   signal(SIGINT, clearSchResources);
   signal(SIGTERM, clearSchResources);
   signal(SIGUSR1, sigUsr1Handler);
+
+  InitWindow(1080, 720, "OctopusOS");
+  GuiLoadStyle("GUI/style_candy.rgs");
+  SetTargetFPS(60);
 
   initClk();
 
@@ -116,6 +124,12 @@ void schedule(scheduler_type schType, int quantem, int gen_msgQID) {
 
   while (1) {
     currentClk = getClk();
+
+    BeginDrawing();
+
+    ClearBackground(GetColor(GuiGetStyle(DEFAULT, BACKGROUND_COLOR)));
+
+    EndDrawing();
 
     if (currentClk - quantemClk >= quantem) {
       quantemClk = currentClk;
