@@ -152,6 +152,43 @@ scheduler_type getSchedulerType() {
  * @quantum: a pointer to the quantum value
  */
 void getInput(scheduler_type *schedulerType, int *quantum) {
+  if (GUI) {
+    *schedulerType = HPF;
+    *quantum = 0;
+    int dropdownBoxActive = 0;
+    int dropdownBoxItemsCount = 3;
+    char *dropdownBoxoptions = "#01#HPF;#02#SRTN;#03#RR";
+
+    int sliderValue = 0;
+    int sliderActive = 0;
+
+    while (true) {
+      BeginDrawing();
+
+      ClearBackground(GetColor(GuiGetStyle(DEFAULT, BACKGROUND_COLOR)));
+
+      // dropdown box
+      GuiSetStyle(DEFAULT, TEXT_SIZE, 20);
+
+      if (GuiDropdownBox((Rectangle){400, 300, 300, 40}, dropdownBoxoptions,
+                         (int *)schedulerType, dropdownBoxActive)) {
+        dropdownBoxActive = !dropdownBoxActive;
+      }
+
+      GuiSetStyle(DEFAULT, TEXT_SIZE, 26);
+      int res = GuiButton((Rectangle){400, 400, 300, 40}, "Start");
+
+      if (res == 1) {
+        printf("Selected: %d\n", *schedulerType);
+        // break;
+      }
+
+      EndDrawing();
+    }
+
+    return;
+  }
+
   *schedulerType = getSchedulerType();
 
   if (*schedulerType == -1) {
