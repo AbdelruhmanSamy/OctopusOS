@@ -14,6 +14,10 @@
 #include "./GUI/raygui.h"
 #include <string.h>
 
+#undef RAYGUI_IMPLEMENTATION
+#define GUI_WINDOW_FILE_DIALOG_IMPLEMENTATION
+#include "./GUI/gui_window_file_dialog.h"
+
 #define WID_WIDTH 1080
 #define WID_HEIGHT 720
 
@@ -162,7 +166,23 @@ void getInput(scheduler_type *schedulerType, int *quantum) {
     int *sliderValue = quantum;
     int sliderActive = 0;
 
+    GuiWindowFileDialogState fileDialogState =
+        InitGuiWindowFileDialog(GetWorkingDirectory());
+    bool fileExitWindow = false;
+    char *fileNameToLoad = malloc(100);
+    fileNameToLoad[0] = '\0';
+
     while (true) {
+
+      if (fileDialogState.SelectFilePressed) {
+        strcpy(fileNameToLoad,
+               TextFormat("%s" PATH_SEPERATOR "%s", fileDialogState.dirPathText,
+                          fileDialogState.fileNameText));
+
+        fileDialogState.SelectFilePressed = false;
+        printf("Selected file: %s\n", fileNameToLoad);
+      }
+
       BeginDrawing();
 
       ClearBackground(GetColor(GuiGetStyle(DEFAULT, BACKGROUND_COLOR)));
@@ -175,15 +195,32 @@ void getInput(scheduler_type *schedulerType, int *quantum) {
         dropdownBoxActive = !dropdownBoxActive;
       }
 
+      // quantum spinner
       if (*schedulerType == RR) {
-        GuiSetStyle(DEFAULT, TEXT_SIZE, 20);
+        GuiSetStyle(DEFAULT, TEXT_SIZE, 25);
         GuiLabel((Rectangle){400, 400, 300, 40}, "Quantum");
+
         if (GuiSpinner((Rectangle){400, 450, 300, 40}, NULL, sliderValue, 1,
                        100, sliderActive) != 0)
           sliderActive = !sliderActive;
 
         *quantum = *sliderValue;
       }
+
+      // choose file
+      if (fileDialogState.windowActive)
+        GuiLock();
+      GuiSetStyle(DEFAULT, TEXT_SIZE, 25);
+      int ReadFile = GuiButton((Rectangle){400, 500, 300, 40}, "Choose File");
+      if (ReadFile) {
+        fileDialogState.windowActive = true;
+      }
+      if (fileNameToLoad != NULL) {
+        GuiSetStyle(DEFAULT, TEXT_ALIGNMENT, TEXT_ALIGN_CENTER);
+        GuiLabel((Rectangle){250, 550, 600, 40}, fileNameToLoad);
+      }
+      GuiUnlock();
+      GuiWindowFileDialog(&fileDialogState);
 
       GuiSetStyle(DEFAULT, TEXT_SIZE, 26);
       int res = GuiButton((Rectangle){400, 600, 300, 40}, "Start");
