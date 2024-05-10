@@ -234,6 +234,7 @@ queue *getInput(scheduler_type *schedulerType, int *quantum) {
       GuiSetStyle(DEFAULT, TEXT_SIZE, 35);
       int res = GuiButton((Rectangle){400, 550, 300, 40}, "Start");
 
+      GuiSetStyle(DEFAULT, TEXT_SIZE, 24);
       GuiWindowFileDialog(&fileDialogState);
 
       if (res == 1) {
