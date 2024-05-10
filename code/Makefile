@@ -2,7 +2,7 @@
 
 all: build run
 
-FLAGS = -lraylib -lGL -lm -lpthread -ldl -lrt -lX11  `pkg-config --cflags --libs gtk+-3.0`
+FLAGS = -lraylib -lGL -lm -lpthread -ldl -lrt -lX11 
 
 build:
 	gcc list.c queue.c process_generator.c -o process_generator.out $(FLAGS)
