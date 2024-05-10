@@ -150,6 +150,8 @@ void schedule(scheduler_type schType, int quantem, int gen_msgQID) {
 
     fclose(logFileptr);
 
+    DrawText(TextFormat("Current Clk: %d", currentClk), 30, 570, 20, BLACK);
+
     if (currentProcess) {
 
       DrawText("Current Process", 30, 600, 30, BLACK);
