@@ -33,6 +33,13 @@ int RRScheduling(void **readyQueue, process_t *process, int *rQuantem);
 void contextSwitch(process_t *newProcess);
 
 //===============================
+// IPC Functions
+//===============================
+int getRemTime(process_t *p);
+void setRemTime(process_t *p, int val);
+void sigUsr1Handler(int signum);
+
+//===============================
 // Preempting Functions
 //===============================
 // TODO: Handle in preempting functions restoring the process state and update
@@ -42,13 +49,6 @@ void contextSwitch(process_t *newProcess);
 void startProcess(process_t *process);
 void preemptProcess(process_t *process);
 void resumeProcess(process_t *process);
-
-//===============================
-// IPC Functions
-//===============================
-int getRemTime(process_t *p);
-void setRemTime(process_t *p, int val);
-void sigUsr1Handler(int signum);
 
 //==============================
 // Logging Functions

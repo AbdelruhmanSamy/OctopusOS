@@ -1,4 +1,4 @@
-At time 7 Allocated 200 bytes for process 1 from 0 to 256
-At time 14 Freed 200 bytes from process 1 from 0 to 256
-At time 18 Allocated 100 bytes for process 2 from 0 to 128
-At time 22 Freed 100 bytes from process 2 from 0 to 128
+At time 1 Allocated 200 bytes for process 1 from 0 to 256
+At time 3 Allocated 170 bytes for process 2 from 256 to 512
+At time 6 Freed 170 bytes from process 2 from 256 to 512
+At time 10 Freed 200 bytes from process 1 from 0 to 256

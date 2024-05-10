@@ -30,7 +30,7 @@ int main(int agrc, char *argv[]) {
   RT = (int *)shmat(shmid, (void *)0, 0);
 
   semid = initSchProSem();
-  
+
   initClk();
 
   printf(ANSI_TEAL "==>process %d: Started\n" ANSI_RESET, getpid());
@@ -46,12 +46,11 @@ int main(int agrc, char *argv[]) {
 
     if (currTime != preTime) {
       preTime = currTime;
-      
+
       down(semid);
       (*RT)--;
       val = *RT;
       up(semid);
-      
     }
 
     currTime = getClk();
