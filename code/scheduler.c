@@ -129,6 +129,27 @@ void schedule(scheduler_type schType, int quantem, int gen_msgQID) {
 
     ClearBackground(GetColor(GuiGetStyle(DEFAULT, BACKGROUND_COLOR)));
 
+    // Read scheduler.log and display as a grid
+
+    DrawText("Scheduler Log", 10, 10, 20, BLACK);
+    DrawRectangle(10, 40, 1060, 670, LIGHTGRAY);
+    DrawRectangleLines(10, 40, 1060, 670, BLACK);
+
+    FILE *logFileptr = fopen(LOG_FILE, "r");
+    if (logFileptr == NULL) {
+      perror("Can't Open Log File");
+      exit(-1);
+    }
+
+    char line[256];
+    int y = 70;
+    while (fgets(line, sizeof(line), logFileptr)) {
+      DrawText(line, 20, y, 20, BLACK);
+      y += 20;
+    }
+
+    fclose(logFileptr);
+
     EndDrawing();
 
     if (currentClk - quantemClk >= quantem) {
