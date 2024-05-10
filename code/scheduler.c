@@ -584,13 +584,14 @@ void preemptProcess(process_t *process) {
     printf(ANSI_GREY "==>SCH: Preempting process with id = %i\n" ANSI_RESET,
            process->pid);
 
-    if (process->state == RUNNING) {
-      kill(process->pid, SIGSTOP);
-      process->state = STOPPED;
+    // if (process->state == RUNNING) {
+    kill(process->pid, SIGSTOP);
+    process->state = STOPPED;
+    process->LST = getClk();
 
-      // log this
-      logger("stopped", process);
-    }
+    // log this
+    logger("stopped", process);
+    // }
   }
 }
 
@@ -604,15 +605,17 @@ void resumeProcess(process_t *process) {
     printf(ANSI_BLUE "==>SCH: Resuming process with id = %i\n" ANSI_RESET,
            process->pid);
 
-    if (process->state == STOPPED) {
-      kill(process->pid, SIGCONT);
-      process->state = RUNNING;
+    // if (process->state == STOPPED) {
+    kill(process->pid, SIGCONT);
+    process->state = RUNNING;
+    process->WT += getClk() - process->LST;
 
-      started = 1;
+    started = 1;
 
-      // log this
-      logger("resumed", process);
-    }
+    // log this
+    logger("resumed", process);
+    setRemTime(process, getRemTime(process) + 1);
+    // }
   }
 }
 
