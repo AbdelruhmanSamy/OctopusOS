@@ -8,10 +8,12 @@
  */
 
 #include "process_generator.h"
-#include "./GUI/raygui.h"
 #include "headers.h"
 #include "raylib.h"
+#define RAYGUI_IMPLEMENTATION
+#include "./GUI/raygui.h"
 #include <string.h>
+
 #define WID_WIDTH 1080
 #define WID_HEIGHT 720
 
@@ -249,7 +251,8 @@ void printBanner() {
     DrawText("Welcome to OctopusOS", 280, 300, 48,
              GetColor(GuiGetStyle(DEFAULT, TEXT_COLOR_NORMAL)));
 
-    if (GuiButton((Rectangle){400, 400, 200, 40}, "Start Simulation")) {
+    GuiSetStyle(DEFAULT, TEXT_SIZE, 30);
+    if (GuiButton((Rectangle){400, 400, 300, 40}, "Start Simulation")) {
       break;
     }
 
