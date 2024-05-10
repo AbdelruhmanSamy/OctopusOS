@@ -10,6 +10,7 @@
 #include "process_generator.h"
 #include "headers.h"
 #include "raylib.h"
+#include "structs.h"
 #define RAYGUI_IMPLEMENTATION
 #include "./GUI/raygui.h"
 #include <string.h>
@@ -20,6 +21,8 @@
 
 #define WID_WIDTH 1080
 #define WID_HEIGHT 720
+
+scheduler_type schtype;
 
 /**
  * main - The main function of the process generator.
@@ -49,6 +52,8 @@ int main(int argc, char *argv[]) {
     processes = readInputFile(fileName);
 
   processes = getInput(&schedulerType, &quantum);
+
+  schtype = schedulerType;
 
   printf(ANSI_GREEN "number of processes: %ld\n" ANSI_RESET, size(processes));
   createSchedulerAndClock(&schedulerPid, &clockPid, (int)schedulerType,
@@ -437,8 +442,13 @@ void sendProcessesToScheduler(queue *processes, int msgQID) {
 
     EndDrawing();
 
-    if (currentTime < process->AT) {
-      lastTime = currentTime;
+    if (schtype != HPF) {
+      if (currentTime < process->AT) {
+        lastTime = currentTime;
+        continue;
+      }
+    } else if (currentTime < process->AT - 1) {
+      lastTime = process->AT;
       continue;
     }
 
