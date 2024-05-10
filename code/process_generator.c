@@ -34,6 +34,7 @@ int main(int argc, char *argv[]) {
   int quantum = 0;
   pid_t schedulerPid, clockPid;
   int msgQID;
+  char *fileName = "processes.txt";
 
   signal(SIGINT, clearResources);
   signal(SIGTERM, clearResources);
@@ -44,11 +45,12 @@ int main(int argc, char *argv[]) {
 
   printBanner();
 
-  processes = readInputFile();
+  if (!GUI)
+    processes = readInputFile(fileName);
+
+  processes = getInput(&schedulerType, &quantum);
+
   printf(ANSI_GREEN "number of processes: %ld\n" ANSI_RESET, size(processes));
-
-  getInput(&schedulerType, &quantum);
-
   createSchedulerAndClock(&schedulerPid, &clockPid, (int)schedulerType,
                           quantum);
 
@@ -70,7 +72,7 @@ int main(int argc, char *argv[]) {
  *
  * return: a pointer to the queue of processes
  */
-queue *readInputFile() {
+queue *readInputFile(char *fileName) {
   FILE *file;
   char *line = NULL;
   size_t len = 0;
@@ -80,7 +82,7 @@ queue *readInputFile() {
   printf(ANSI_YELLOW "|| Reading processes file ||" ANSI_RESET "\n");
   printf(ANSI_YELLOW "============================" ANSI_RESET "\n");
 
-  file = fopen("processes.txt", "r");
+  file = fopen(fileName, "r");
   if (file == NULL) {
     perror("Error in opening file");
     exit(-1);
@@ -155,7 +157,7 @@ scheduler_type getSchedulerType() {
  * @schedulerType: a pointer to the chosen scheduler type
  * @quantum: a pointer to the quantum value
  */
-void getInput(scheduler_type *schedulerType, int *quantum) {
+queue *getInput(scheduler_type *schedulerType, int *quantum) {
   if (GUI) {
     *schedulerType = HPF;
     *quantum = 0;
@@ -187,20 +189,20 @@ void getInput(scheduler_type *schedulerType, int *quantum) {
 
       ClearBackground(GetColor(GuiGetStyle(DEFAULT, BACKGROUND_COLOR)));
 
-      // dropdown box
-      GuiSetStyle(DEFAULT, TEXT_SIZE, 20);
+      // Title
+      GuiSetStyle(DEFAULT, TEXT_SIZE, 60);
+      GuiLabel((Rectangle){350, 160, 400, 40}, "OctopusOS");
 
-      if (GuiDropdownBox((Rectangle){400, 300, 300, 40}, dropdownBoxoptions,
-                         (int *)schedulerType, dropdownBoxActive)) {
-        dropdownBoxActive = !dropdownBoxActive;
-      }
+      // caption
+      GuiSetStyle(DEFAULT, TEXT_SIZE, 30);
+      GuiLabel((Rectangle){300, 200, 500, 40}, "Please choose your params");
 
       // quantum spinner
       if (*schedulerType == RR) {
         GuiSetStyle(DEFAULT, TEXT_SIZE, 25);
-        GuiLabel((Rectangle){400, 400, 300, 40}, "Quantum");
+        GuiLabel((Rectangle){400, 350, 300, 40}, "Quantum");
 
-        if (GuiSpinner((Rectangle){400, 450, 300, 40}, NULL, sliderValue, 1,
+        if (GuiSpinner((Rectangle){400, 400, 300, 40}, NULL, sliderValue, 1,
                        100, sliderActive) != 0)
           sliderActive = !sliderActive;
 
@@ -211,30 +213,41 @@ void getInput(scheduler_type *schedulerType, int *quantum) {
       if (fileDialogState.windowActive)
         GuiLock();
       GuiSetStyle(DEFAULT, TEXT_SIZE, 25);
-      int ReadFile = GuiButton((Rectangle){400, 500, 300, 40}, "Choose File");
+      int ReadFile = GuiButton((Rectangle){400, 450, 300, 40}, "Choose File");
       if (ReadFile) {
         fileDialogState.windowActive = true;
       }
       if (fileNameToLoad != NULL) {
         GuiSetStyle(DEFAULT, TEXT_ALIGNMENT, TEXT_ALIGN_CENTER);
-        GuiLabel((Rectangle){250, 550, 600, 40}, fileNameToLoad);
+        GuiLabel((Rectangle){250, 500, 600, 40}, fileNameToLoad);
       }
       GuiUnlock();
-      GuiWindowFileDialog(&fileDialogState);
 
-      GuiSetStyle(DEFAULT, TEXT_SIZE, 26);
-      int res = GuiButton((Rectangle){400, 600, 300, 40}, "Start");
+      // dropdown box
+      GuiSetStyle(DEFAULT, TEXT_SIZE, 30);
+
+      if (GuiDropdownBox((Rectangle){400, 300, 300, 40}, dropdownBoxoptions,
+                         (int *)schedulerType, dropdownBoxActive)) {
+        dropdownBoxActive = !dropdownBoxActive;
+      }
+
+      GuiSetStyle(DEFAULT, TEXT_SIZE, 35);
+      int res = GuiButton((Rectangle){400, 550, 300, 40}, "Start");
+
+      GuiWindowFileDialog(&fileDialogState);
 
       if (res == 1) {
         printf("Selected: %d\n", *schedulerType);
         printf("Quantum: %d\n", *quantum);
-        // break;
+        printf("File: %s\n", fileNameToLoad);
+
+        return readInputFile(fileNameToLoad);
       }
 
       EndDrawing();
     }
 
-    return;
+    return NULL;
   }
 
   *schedulerType = getSchedulerType();
