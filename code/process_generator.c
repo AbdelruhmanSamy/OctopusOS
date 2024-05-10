@@ -416,10 +416,25 @@ void sendProcessesToScheduler(queue *processes, int msgQID) {
   int lastTime = currentTime;
   process_t *process;
   int response;
+  int Count = size(processes);
+  float *progress = malloc(sizeof(float) * Count);
 
   while (!empty(processes)) {
     process = (process_t *)front(processes);
     currentTime = getClk();
+
+    BeginDrawing();
+
+    ClearBackground(GetColor(GuiGetStyle(DEFAULT, BACKGROUND_COLOR)));
+
+    DrawText("Sending Processes to Scheduler", 150, 300, 48,
+             GetColor(GuiGetStyle(DEFAULT, TEXT_COLOR_NORMAL)));
+
+    *progress = Count - size(processes);
+    GuiProgressBar((Rectangle){150, 400, 800, 40}, NULL, NULL, progress, 0,
+                   Count);
+
+    EndDrawing();
 
     if (currentTime < process->AT) {
       lastTime = currentTime;
@@ -450,6 +465,21 @@ void sendProcessesToScheduler(queue *processes, int msgQID) {
     pop(processes);
     lastTime = currentTime;
   }
+  BeginDrawing();
+
+  ClearBackground(GetColor(GuiGetStyle(DEFAULT, BACKGROUND_COLOR)));
+
+  DrawText("Sent All Processes to Scheduler", 150, 300, 48,
+           GetColor(GuiGetStyle(DEFAULT, TEXT_COLOR_NORMAL)));
+
+  *progress = Count;
+  GuiProgressBar((Rectangle){150, 400, 800, 40}, NULL, NULL, progress, 0,
+                 Count);
+
+  DrawText("Check other window for output", 150, 500, 48,
+           GetColor(GuiGetStyle(DEFAULT, TEXT_COLOR_NORMAL)));
+
+  EndDrawing();
 
   process->id = -1;
   response = msgsnd(msgQID, process, sizeof(process_t), !IPC_NOWAIT);
