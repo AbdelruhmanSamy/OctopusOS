@@ -150,6 +150,16 @@ void schedule(scheduler_type schType, int quantem, int gen_msgQID) {
 
     fclose(logFileptr);
 
+    if (currentProcess) {
+
+      DrawText("Current Process", 30, 600, 30, BLACK);
+      DrawText(TextFormat("ID: %d", currentProcess->id), 20, 640, 20, BLACK);
+      DrawText(TextFormat("AT: %d", currentProcess->AT), 200, 640, 20, BLACK);
+      DrawText(TextFormat("BT: %d", currentProcess->BT), 380, 640, 20, BLACK);
+      DrawText(TextFormat("RT: %d", getRemTime(currentProcess)), 560, 640, 20,
+               BLACK);
+    }
+
     EndDrawing();
 
     if (currentClk - quantemClk >= quantem) {
@@ -202,6 +212,35 @@ void schedule(scheduler_type schType, int quantem, int gen_msgQID) {
     lastClk = currentClk;
   }
 
+  BeginDrawing();
+
+  ClearBackground(GetColor(GuiGetStyle(DEFAULT, BACKGROUND_COLOR)));
+
+  // Read scheduler.log and display as a grid
+
+  DrawText("Scheduler Log", 10, 10, 20, BLACK);
+  DrawRectangle(10, 40, 1060, 670, LIGHTGRAY);
+  DrawRectangleLines(10, 40, 1060, 670, BLACK);
+
+  FILE *logFileptr = fopen(LOG_FILE, "r");
+  if (logFileptr == NULL) {
+    perror("Can't Open Log File");
+    exit(-1);
+  }
+
+  char line[256];
+  int y = 70;
+  while (fgets(line, sizeof(line), logFileptr)) {
+    DrawText(line, 20, y, 20, BLACK);
+    y += 20;
+  }
+
+  fclose(logFileptr);
+
+  EndDrawing();
+
+  TakeScreenshot("scheduler.log.png");
+
   switch (schType) {
   case HPF:
   case SRTN:
@@ -215,6 +254,45 @@ void schedule(scheduler_type schType, int quantem, int gen_msgQID) {
   }
 
   writePerfFile();
+
+  BeginDrawing();
+
+  ClearBackground(GetColor(GuiGetStyle(DEFAULT, BACKGROUND_COLOR)));
+
+  DrawText("Scheduler Performance", 10, 10, 20, BLACK);
+  DrawRectangle(10, 40, 1060, 670, LIGHTGRAY);
+  DrawRectangleLines(10, 40, 1060, 670, BLACK);
+
+  FILE *perfFile = fopen(PERF_FILE, "r");
+  if (perfFile == NULL) {
+    perror("Can't Open Perf File");
+    exit(-1);
+  }
+
+  y = 70;
+  while (fgets(line, sizeof(line), perfFile)) {
+    DrawText(line, 20, y, 20, BLACK);
+    y += 20;
+  }
+
+  fclose(perfFile);
+
+  EndDrawing();
+
+  TakeScreenshot("scheduler.perf.png");
+
+  while (true) {
+
+    BeginDrawing();
+    GuiSetStyle(DEFAULT, TEXT_SIZE, 30);
+    int button = GuiButton((Rectangle){200, 600, 600, 40},
+                           GuiIconText(ICON_EXIT, "Exit"));
+    if (button) {
+      break;
+    }
+    EndDrawing();
+  }
+
   printf(ANSI_BLUE "==>SCH: " ANSI_RED ANSI_BOLD
                    "Scheduler Finished\n" ANSI_RESET);
 
@@ -648,6 +726,8 @@ void writePerfFile() {
   fprintf(perfFile, "Avg WTA = %.2f\n", stats.avgWTA);
   fprintf(perfFile, "Avg Waiting = %.2f\n", stats.avgWaitingTime);
   fprintf(perfFile, "Std WTA = %.2f\n", stats.stdWTA);
+
+  fclose(perfFile);
 }
 
 int getRemTime(process_t *p) {
