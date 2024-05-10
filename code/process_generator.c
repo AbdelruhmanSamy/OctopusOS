@@ -437,7 +437,7 @@ void sendProcessesToScheduler(queue *processes, int msgQID) {
 
     EndDrawing();
 
-    if (currentTime < process->AT - 1) {
+    if (currentTime < process->AT) {
       lastTime = currentTime;
       continue;
     }
