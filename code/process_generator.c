@@ -8,8 +8,12 @@
  */
 
 #include "process_generator.h"
+#include "./GUI/raygui.h"
 #include "headers.h"
+#include "raylib.h"
 #include <string.h>
+#define WID_WIDTH 1080
+#define WID_HEIGHT 720
 
 /**
  * main - The main function of the process generator.
@@ -27,6 +31,10 @@ int main(int argc, char *argv[]) {
 
   signal(SIGINT, clearResources);
   signal(SIGTERM, clearResources);
+
+  InitWindow(WID_WIDTH, WID_HEIGHT, "OctopusOS");
+  GuiLoadStyle("GUI/style_cyber.rgs");
+  SetTargetFPS(60);
 
   printBanner();
 
@@ -46,6 +54,7 @@ int main(int argc, char *argv[]) {
 
   wait(NULL);
 
+  CloseWindow();
   cleanUp();
 }
 
@@ -230,6 +239,22 @@ void printBanner() {
   printf("Welcome to OctopusOS\n");
   if (DELAY)
     sleep(1);
+
+  // GUI Banner
+  while (true) {
+    BeginDrawing();
+
+    ClearBackground(GetColor(GuiGetStyle(DEFAULT, BACKGROUND_COLOR)));
+
+    DrawText("Welcome to OctopusOS", 280, 300, 48,
+             GetColor(GuiGetStyle(DEFAULT, TEXT_COLOR_NORMAL)));
+
+    if (GuiButton((Rectangle){400, 400, 200, 40}, "Start Simulation")) {
+      break;
+    }
+
+    EndDrawing();
+  }
   printf(ANSI_RESET);
 }
 
