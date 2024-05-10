@@ -159,7 +159,7 @@ void getInput(scheduler_type *schedulerType, int *quantum) {
     int dropdownBoxItemsCount = 3;
     char *dropdownBoxoptions = "#01#HPF;#02#SRTN;#03#RR";
 
-    int sliderValue = 0;
+    int *sliderValue = quantum;
     int sliderActive = 0;
 
     while (true) {
@@ -175,11 +175,22 @@ void getInput(scheduler_type *schedulerType, int *quantum) {
         dropdownBoxActive = !dropdownBoxActive;
       }
 
+      if (*schedulerType == RR) {
+        GuiSetStyle(DEFAULT, TEXT_SIZE, 20);
+        GuiLabel((Rectangle){400, 400, 300, 40}, "Quantum");
+        if (GuiSpinner((Rectangle){400, 450, 300, 40}, NULL, sliderValue, 1,
+                       100, sliderActive) != 0)
+          sliderActive = !sliderActive;
+
+        *quantum = *sliderValue;
+      }
+
       GuiSetStyle(DEFAULT, TEXT_SIZE, 26);
-      int res = GuiButton((Rectangle){400, 400, 300, 40}, "Start");
+      int res = GuiButton((Rectangle){400, 600, 300, 40}, "Start");
 
       if (res == 1) {
         printf("Selected: %d\n", *schedulerType);
+        printf("Quantum: %d\n", *quantum);
         // break;
       }
 
