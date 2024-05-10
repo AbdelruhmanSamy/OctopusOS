@@ -146,6 +146,10 @@ void schedule(scheduler_type schType, int quantem, int gen_msgQID) {
     while (fgets(line, sizeof(line), logFileptr)) {
       DrawText(line, 20, y, 20, BLACK);
       y += 20;
+      if (y > 560) {
+        DrawRectangle(10, 40, 1060, 670, LIGHTGRAY);
+        y = 70;
+      }
     }
 
     fclose(logFileptr);
@@ -232,16 +236,26 @@ void schedule(scheduler_type schType, int quantem, int gen_msgQID) {
 
   char line[256];
   int y = 70;
+  int count = 0;
+
+  EndDrawing();
   while (fgets(line, sizeof(line), logFileptr)) {
+    BeginDrawing();
     DrawText(line, 20, y, 20, BLACK);
     y += 20;
+    if (y > 600) {
+      const char *filename = TextFormat("scheduler.log.%d.png", count++);
+      TakeScreenshot(filename);
+      DrawRectangle(10, 40, 1060, 670, LIGHTGRAY);
+      y = 70;
+    }
+    EndDrawing();
   }
 
   fclose(logFileptr);
 
-  EndDrawing();
-
-  TakeScreenshot("scheduler.log.png");
+  const char *filename = TextFormat("scheduler.log.%d.png", count++);
+  TakeScreenshot(filename);
 
   switch (schType) {
   case HPF:
