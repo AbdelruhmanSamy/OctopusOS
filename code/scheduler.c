@@ -389,8 +389,8 @@ int SRTNScheduling(void **readyQueue, process_t *process, int *rQuantem) {
     contextSwitch(newScheduledProcess);
   } else if (getMin(*readyQ) &&
              compareSRTN(getMin(*readyQ), currentProcess) < 0) {
-    preemptProcess(currentProcess);
     newScheduledProcess = (process_t *)extractMin(*readyQ);
+    preemptProcess(currentProcess);
     insertMinHeap(readyQ, currentProcess);
     currentProcess = NULL;
     contextSwitch(newScheduledProcess);
