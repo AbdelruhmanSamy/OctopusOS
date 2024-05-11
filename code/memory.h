@@ -27,6 +27,7 @@ memory_block_t *findMemoryBlockByProcessId(memory_block_t *root, int processId);
 memory_block_t *initMemory();
 memory_block_t *allocateMemory(memory_block_t *root, int size, int processId);
 void freeMemory(memory_block_t *root, int processId);
+int isThereEnoughSpaceFor(memory_block_t *root, int size);
 
 // output functions
 void createMemoryLogFile();

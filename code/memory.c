@@ -155,6 +155,22 @@ void freeMemory(memory_block_t *root, int processId) {
 }
 
 /**
+ * isThereEnoughSpaceFor - Check if there is enough space for a memory block
+ *
+ * @param root - The root of the memory block
+ * @param size - The size of the memory block
+ * @return int - 1 if there is enough space, 0 otherwise
+ */
+int isThereEnoughSpaceFor(memory_block_t *root, int size) {
+  memory_block_t *block = allocateMemory(root, size, 0);
+  if (block != NULL) {
+    freeMemory(root, 0);
+    return 1;
+  }
+  return 0;
+}
+
+/**
  * findMemoryBlock - Find a memory block by address used by printing
  *
  * @param root - The root of the memory block
@@ -371,3 +387,19 @@ void memoryLogger(memory_block_t *root, int time, const char *message,
 //    fancyPrintMemoryBar(memory);
 //    return 0;
 //  }
+//
+//
+// int main() {
+//   memory_block_t *memory = initMemory();
+//   if (isThereEnoughSpaceFor(memory, 256))
+//     printf("There is enough space for 256 bytes\n");
+//   else
+//     printf("There is not enough space for 256 bytes\n");
+//   allocateMemory(memory, 256, 1);
+//   allocateMemory(memory, 256, 2);
+//   allocateMemory(memory, 256, 3);
+//   if (isThereEnoughSpaceFor(memory, 256))
+//     printf("There is enough space for 256 bytes\n");
+//   else
+//     printf("There is not enough space for 256 bytes\n");
+// }
