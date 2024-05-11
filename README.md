@@ -4,11 +4,10 @@
 
 ---
 
-OctopusOS: if you got tired of your boring windows and want something more fun and with more limbs try OctopusOs, OctopusOs is a multi process scheduler and memory manger simulator made for Linux.
+OctopusOS: if you got tired of your boring windows and want something more fun and with more limbs try OctopusOs, OctopusOs is a multi-process scheduler and memory manager simulator made for Linux.
 
-<video width="620" height="320" controls>
-  <source src="./public/vids/req1.mp4" type="video/mp4">
-</video>
+
+https://github.com/AbdelruhmanSamy/OctopusOS/assets/88613195/e4b596fc-5632-4a02-b5d5-4f957bde0441
 
 ---
 
@@ -19,17 +18,17 @@ OctopusOS: if you got tired of your boring windows and want something more fun a
 - **HPF** (Highest Priority First) Scheduling
 - Doubly list, Priority Queue, Queue, and binary tree data structures implementation.
 - Memory management with **buddy system** algorithm.
-- Multi process scheduler process clock generator for maximum use of **IPC** (Inter Process Communication).
+- Multi-process scheduler process clock generator for maximum use of **IPC** (Inter-Process Communication).
 - **GUI** built with C and raylib/raygui library.
 - Expressive output featuring:
-  - log of all process info in scheduler.log
-  - log of all memory info in memory.log
+  - Log all process info in scheduler.log
+  - Log all memory info in memory.log
   - performance metrics in scheduler.perf
-  - Fancy Terminal output and **ascii art**.
+  - Fancy Terminal output and **ASCII art**.
   - Images exported of the system each run include the scheduler log and perf log.
 
 > [!NOTE]
-> GUI is bonus feature you can do it with any language you want Ex: `JS(Electron)`
+> GUI is a bonus feature you can do it with any language you want Ex: `JS(Electron)`
 
 ![OctopusOS](./public/imgs/octo-assci.png)
 
