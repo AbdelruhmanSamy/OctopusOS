@@ -174,10 +174,10 @@ void schedule(scheduler_type schType, int quantem, int gen_msgQID) {
       printf(ANSI_GREY "========================================\n" ANSI_RESET);
       printf(ANSI_BLUE "==>SCH: Current Clk = %i\n" ANSI_RESET, currentClk);
 
-      if (started || WasRunning) {
-        stats.totalWorkingTime++;
-      }
-
+      // if (started || WasRunning) {
+      //   stats.totalWorkingTime++;
+      // }
+      //
       started = 0;
 
       if (currentProcess) {
@@ -215,6 +215,7 @@ void schedule(scheduler_type schType, int quantem, int gen_msgQID) {
     }
   }
 
+  writePerfFile();
   BeginDrawing();
 
   ClearBackground(GetColor(GuiGetStyle(DEFAULT, BACKGROUND_COLOR)));
@@ -265,8 +266,6 @@ void schedule(scheduler_type schType, int quantem, int gen_msgQID) {
   default:
     exit(-1);
   }
-
-  writePerfFile();
 
   BeginDrawing();
 
@@ -734,6 +733,7 @@ void logger(char *msg, process_t *p) {
   if (strcmp(msg, "finished") == 0) {
     fprintf(logFileptr, " TA %i WTA %.2f", p->TA, WTA);
     stats.WTAs[stats.numFinished] = WTA;
+    stats.totalWorkingTime += p->BT;
     stats.numFinished += 1;
     stats.totalWaitingTime += p->WT;
     stats.totalWTA += WTA;
