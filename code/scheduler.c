@@ -25,7 +25,6 @@ perfStats stats;
 int semid;
 
 bool started;
-bool terminated;
 /**
  * main - The main function of the scheduler.
  *
@@ -114,12 +113,11 @@ void schedule(scheduler_type schType, int quantem, int gen_msgQID) {
   default:
     exit(-1);
   }
-
+  currentClk = 0;
   quantemClk = getClk();
   int lastClk = quantemClk;
 
   started = 0;
-  terminated = 0;
   bool WasRunning = 0;
 
   while (1) {
@@ -182,7 +180,6 @@ void schedule(scheduler_type schType, int quantem, int gen_msgQID) {
       }
 
       started = 0;
-      terminated = 0;
 
       if (currentProcess) {
         WasRunning = 1;
@@ -197,6 +194,7 @@ void schedule(scheduler_type schType, int quantem, int gen_msgQID) {
       }
     }
 
+    down(semid);
     newProcess = NULL;
     if (processesFlag) {
       while (getProcess(&processesFlag, gen_msgQID, &process)) {
@@ -204,6 +202,7 @@ void schedule(scheduler_type schType, int quantem, int gen_msgQID) {
         algorithm(&readyQ, newProcess, &rQuantem);
       }
     }
+    up(semid);
     newProcess = NULL;
 
     if (!algorithm(&readyQ, newProcess, &rQuantem) && !processesFlag &&
@@ -544,7 +543,7 @@ process_t *createProcess(process_t *process) {
 
   newProcess->RT = shmAdd;
 
-  setRemTime(newProcess, process->BT);
+  *newProcess->RT =  process->BT;
 
   return newProcess;
 }
@@ -619,8 +618,7 @@ void resumeProcess(process_t *process) {
     printf(ANSI_BLUE "==>SCH: Resuming process with id = %i\n" ANSI_RESET,
            process->pid);
 
-    // if (process->state == STOPPED) {
-    kill(process->pid, SIGCONT);
+
     process->state = RUNNING;
     process->WT += getClk() - process->LST;
 
@@ -628,8 +626,10 @@ void resumeProcess(process_t *process) {
 
     // log this
     logger("resumed", process);
-    setRemTime(process, getRemTime(process) + 1);
-    // }
+      
+        // if (process->state == STOPPED) {
+    kill(process->pid, SIGCONT);
+
   }
 }
 
@@ -659,8 +659,6 @@ void sigUsr1Handler(int signum) {
   int status;
   killedProcess = wait(&status);
 
-  terminated = 1;
-
   currentProcess->TA = getClk() - currentProcess->AT;
   logger("finished", currentProcess);
   // TODO: Free memory here and log it
@@ -676,6 +674,7 @@ void sigUsr1Handler(int signum) {
                       // this true?*)
     free(currentProcess);
   currentProcess = NULL;
+  up(semid);
 }
 
 void createLogFile() {
