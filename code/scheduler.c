@@ -160,7 +160,7 @@ void schedule(scheduler_type schType, int quantem, int gen_msgQID) {
       DrawText(TextFormat("ID: %d", currentProcess->id), 20, 640, 20, BLACK);
       DrawText(TextFormat("AT: %d", currentProcess->AT), 200, 640, 20, BLACK);
       DrawText(TextFormat("BT: %d", currentProcess->BT), 380, 640, 20, BLACK);
-      DrawText(TextFormat("RT: %d", getRemTime(currentProcess)), 560, 640, 20,
+      DrawText(TextFormat("RT: %d", *currentProcess->RT), 560, 640, 20,
                BLACK);
     }
 
@@ -183,7 +183,7 @@ void schedule(scheduler_type schType, int quantem, int gen_msgQID) {
 
       if (currentProcess) {
         WasRunning = 1;
-        int remTime = getRemTime(currentProcess);
+        int remTime = *currentProcess->RT;
         if (remTime > 0) {
           printf(ANSI_BLUE "==>SCH:" ANSI_GREEN " Process %d " ANSI_BOLD
                            "RT = %i\n" ANSI_RESET,
@@ -339,9 +339,9 @@ int compareHPF(void *e1, void *e2) {
  * Return: 1 if e2 Remaining Time is less, -1 if e1 is less, 0 if they are equal
  */
 int compareSRTN(void *e1, void *e2) {
-  if (getRemTime((process_t *)e1) < getRemTime((process_t *)e2))
+  if (*((process_t *)e1)->RT < *((process_t *)e2)->RT)
     return -1;
-  if (getRemTime((process_t *)e1) > getRemTime((process_t *)e2))
+   if (*((process_t *)e1)->RT > *((process_t *)e2)->RT)
     return 1;
   return 0;
 }
@@ -623,7 +623,7 @@ void resumeProcess(process_t *process) {
 
     process->state = RUNNING;
     process->WT += getClk() - process->LST;
-
+    (*process->RT)++;
     started = 1;
 
     // log this
@@ -751,16 +751,3 @@ void writePerfFile() {
   fclose(perfFile);
 }
 
-int getRemTime(process_t *p) {
-  down(semid);
-  int val = *(p->RT);
-  up(semid);
-
-  return val;
-}
-
-void setRemTime(process_t *p, int val) {
-  down(semid);
-  *(p->RT) = val;
-  up(semid);
-}
