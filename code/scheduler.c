@@ -192,8 +192,6 @@ void schedule(scheduler_type schType, int quantem, int gen_msgQID) {
       } else {
         WasRunning = 0;
       }
-    }
-
     down(semid);
     newProcess = NULL;
     if (processesFlag) {
@@ -215,6 +213,8 @@ void schedule(scheduler_type schType, int quantem, int gen_msgQID) {
     }
 
     lastClk = currentClk;
+    }
+
   }
 
   BeginDrawing();
@@ -457,7 +457,7 @@ int RRScheduling(void **readyQueue, process_t *process, int *rQuantem) {
 int getProcess(int *processesFlag, int gen_msgQID, process_t *process) {
   int response;
 
-  response = msgrcv(gen_msgQID, process, sizeof(process_t), 0, IPC_NOWAIT);
+  response = msgrcv(gen_msgQID, process, sizeof(process_t), 0, !IPC_NOWAIT);
 
   if (response == -1) {
     if (errno == ENOMSG) {
@@ -466,7 +466,9 @@ int getProcess(int *processesFlag, int gen_msgQID, process_t *process) {
     perror("Error in receiving process from process generator");
     exit(-1);
   }
-
+ if (process->id == -404) {
+    return 0;
+ }
   if (process->id == -1) {
     printf(ANSI_BLUE "==>SCH: " ANSI_RED ANSI_BOLD
                      "Received All Processes\n" ANSI_RESET);

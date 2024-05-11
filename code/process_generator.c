@@ -419,14 +419,13 @@ void createSchedulerAndClock(pid_t *schedulerPid, pid_t *clockPid,
  */
 void sendProcessesToScheduler(queue *processes, int msgQID) {
   int currentTime = getClk();
-  int lastTime = currentTime-1;
+  int lastTime = currentTime;
   process_t *process;
   int response;
   int Count = size(processes);
   float *progress = malloc(sizeof(float) * Count);
-
   process_t* nullProcess = malloc(sizeof(process_t));
-  nullProcess->id = 404;
+  nullProcess->id = -404;
 
   while (!empty(processes)) {
     currentTime = getClk();
@@ -451,6 +450,7 @@ void sendProcessesToScheduler(queue *processes, int msgQID) {
 
       if (currentTime < process->AT) {
         lastTime = currentTime;
+      response = msgsnd(msgQID, nullProcess, sizeof(process_t), !IPC_NOWAIT);
         break;
       }
 
@@ -475,10 +475,10 @@ void sendProcessesToScheduler(queue *processes, int msgQID) {
       perror("Error in sending process to scheduler\n");
       exit(-1);
     }
-
-    pop(processes);
-    lastTime = currentTime;
-    process = (process_t *)front(processes);
+     
+      pop(processes);
+      lastTime = currentTime;
+      process = (process_t *)front(processes);
     }
     }
   
@@ -499,8 +499,8 @@ void sendProcessesToScheduler(queue *processes, int msgQID) {
 
   EndDrawing();
 
-  process->id = -1;
-  response = msgsnd(msgQID, process, sizeof(process_t), !IPC_NOWAIT);
+  nullProcess->id = -1;
+  response = msgsnd(msgQID, nullProcess, sizeof(process_t), !IPC_NOWAIT);
   if (response == -1) {
     perror("Error in terminating sending processes to scheduler\n");
     exit(-1);
