@@ -430,9 +430,9 @@ void sendProcessesToScheduler(queue *processes, int msgQID) {
 
   while (!empty(processes)) {
     currentTime = getClk();
-    if(currentTime != lastTime){
-
     process = (process_t *)front(processes);
+
+    if(currentTime != lastTime){
 
     BeginDrawing();
 
@@ -447,14 +447,13 @@ void sendProcessesToScheduler(queue *processes, int msgQID) {
 
     EndDrawing();
 
+    while(process){
+
       if (currentTime < process->AT) {
         lastTime = currentTime;
-        continue;
+        break;
       }
-    //  else if (currentTime < process->AT - 1) {
-    //   lastTime = process->AT;
-    //   continue;
-    // }
+
 
     printf(ANSI_PURPLE "=>GEN:Sending process with id: %d, AT: %d, BT: %d, "
                        "priority: %d, memzie: %d to scheduler\n" ANSI_RESET,
@@ -479,6 +478,8 @@ void sendProcessesToScheduler(queue *processes, int msgQID) {
 
     pop(processes);
     lastTime = currentTime;
+    process = (process_t *)front(processes);
+    }
     }
   
   }
