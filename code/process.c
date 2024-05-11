@@ -5,6 +5,7 @@ int *RT;
 int shmid;
 int semid;
 void sigTermHandler(int signum) {
+  down(semid);
   if (shmdt(RT) == -1) {
     perror("Error in detach\n");
   } else if (DEBUG) {

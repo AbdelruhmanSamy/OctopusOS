@@ -419,15 +419,20 @@ void createSchedulerAndClock(pid_t *schedulerPid, pid_t *clockPid,
  */
 void sendProcessesToScheduler(queue *processes, int msgQID) {
   int currentTime = getClk();
-  int lastTime = currentTime;
+  int lastTime = currentTime-1;
   process_t *process;
   int response;
   int Count = size(processes);
   float *progress = malloc(sizeof(float) * Count);
 
+  process_t* nullProcess = malloc(sizeof(process_t));
+  nullProcess->id = 404;
+
   while (!empty(processes)) {
-    process = (process_t *)front(processes);
     currentTime = getClk();
+    if(currentTime != lastTime){
+
+    process = (process_t *)front(processes);
 
     BeginDrawing();
 
@@ -442,15 +447,14 @@ void sendProcessesToScheduler(queue *processes, int msgQID) {
 
     EndDrawing();
 
-    if (schtype != HPF) {
       if (currentTime < process->AT) {
         lastTime = currentTime;
         continue;
       }
-    } else if (currentTime < process->AT - 1) {
-      lastTime = process->AT;
-      continue;
-    }
+    //  else if (currentTime < process->AT - 1) {
+    //   lastTime = process->AT;
+    //   continue;
+    // }
 
     printf(ANSI_PURPLE "=>GEN:Sending process with id: %d, AT: %d, BT: %d, "
                        "priority: %d, memzie: %d to scheduler\n" ANSI_RESET,
@@ -475,6 +479,8 @@ void sendProcessesToScheduler(queue *processes, int msgQID) {
 
     pop(processes);
     lastTime = currentTime;
+    }
+  
   }
   BeginDrawing();
 
