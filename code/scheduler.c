@@ -160,8 +160,7 @@ void schedule(scheduler_type schType, int quantem, int gen_msgQID) {
       DrawText(TextFormat("ID: %d", currentProcess->id), 20, 640, 20, BLACK);
       DrawText(TextFormat("AT: %d", currentProcess->AT), 200, 640, 20, BLACK);
       DrawText(TextFormat("BT: %d", currentProcess->BT), 380, 640, 20, BLACK);
-      DrawText(TextFormat("RT: %d", *currentProcess->RT), 560, 640, 20,
-               BLACK);
+      DrawText(TextFormat("RT: %d", *currentProcess->RT), 560, 640, 20, BLACK);
     }
 
     EndDrawing();
@@ -192,29 +191,28 @@ void schedule(scheduler_type schType, int quantem, int gen_msgQID) {
       } else {
         WasRunning = 0;
       }
-    down(semid);
-    newProcess = NULL;
-    if (processesFlag) {
-      while (getProcess(&processesFlag, gen_msgQID, &process)) {
-        newProcess = createProcess(&process);
-        algorithm(&readyQ, newProcess, &rQuantem);
+      down(semid);
+      newProcess = NULL;
+      if (processesFlag) {
+        while (getProcess(&processesFlag, gen_msgQID, &process)) {
+          newProcess = createProcess(&process);
+          algorithm(&readyQ, newProcess, &rQuantem);
+        }
       }
+      up(semid);
+      newProcess = NULL;
+
+      if (!algorithm(&readyQ, newProcess, &rQuantem) && !processesFlag &&
+          !currentProcess)
+        break;
+
+      if (rQuantem <= 0) {
+        quantemClk = currentClk;
+        rQuantem = quantem;
+      }
+
+      lastClk = currentClk;
     }
-    up(semid);
-    newProcess = NULL;
-
-    if (!algorithm(&readyQ, newProcess, &rQuantem) && !processesFlag &&
-        !currentProcess)
-      break;
-
-    if (rQuantem <= 0) {
-      quantemClk = currentClk;
-      rQuantem = quantem;
-    }
-
-    lastClk = currentClk;
-    }
-
   }
 
   BeginDrawing();
@@ -341,7 +339,7 @@ int compareHPF(void *e1, void *e2) {
 int compareSRTN(void *e1, void *e2) {
   if (*((process_t *)e1)->RT < *((process_t *)e2)->RT)
     return -1;
-   if (*((process_t *)e1)->RT > *((process_t *)e2)->RT)
+  if (*((process_t *)e1)->RT > *((process_t *)e2)->RT)
     return 1;
   return 0;
 }
@@ -369,6 +367,14 @@ int HPFScheduling(void **readyQueue, process_t *process, int *rQuantem) {
     return 0;
 
   if (!currentProcess) {
+    newScheduledProcess = (process_t *)getMin(*readyQ);
+    if (!newScheduledProcess ||
+        !isThereEnoughSpaceFor(memory, newScheduledProcess->memsize)) {
+      printf(ANSI_RED "==>SCH: No enough memory for process %d\n" ANSI_RESET,
+             newScheduledProcess->id);
+      return 1;
+    }
+
     newScheduledProcess = (process_t *)extractMin(*readyQ);
     contextSwitch(newScheduledProcess);
   }
@@ -398,8 +404,17 @@ int SRTNScheduling(void **readyQueue, process_t *process, int *rQuantem) {
     return 0;
 
   if (!currentProcess) {
+    newScheduledProcess = (process_t *)getMin(*readyQ);
+    if (!newScheduledProcess ||
+        !isThereEnoughSpaceFor(memory, newScheduledProcess->memsize)) {
+      printf(ANSI_RED "==>SCH: No enough memory for process %d\n" ANSI_RESET,
+             newScheduledProcess->id);
+      return 1;
+    }
+
     newScheduledProcess = (process_t *)extractMin(*readyQ);
     contextSwitch(newScheduledProcess);
+
   } else if (getMin(*readyQ) &&
              compareSRTN(getMin(*readyQ), currentProcess) < 0) {
     newScheduledProcess = (process_t *)extractMin(*readyQ);
@@ -435,6 +450,13 @@ int RRScheduling(void **readyQueue, process_t *process, int *rQuantem) {
 
   if (!currentProcess) {
     *rQuantem = -1;
+    newScheduledProcess = (process_t *)front(*readyQ);
+    if (!newScheduledProcess ||
+        !isThereEnoughSpaceFor(memory, newScheduledProcess->memsize)) {
+      printf(ANSI_RED "==>SCH: No enough memory for process %d\n" ANSI_RESET,
+             newScheduledProcess->id);
+      return 1;
+    }
     contextSwitch((process_t *)pop(*readyQ));
   } else if (*rQuantem <= 0 && !empty(*readyQ)) {
     preemptProcess(currentProcess);
@@ -466,9 +488,9 @@ int getProcess(int *processesFlag, int gen_msgQID, process_t *process) {
     perror("Error in receiving process from process generator");
     exit(-1);
   }
- if (process->id == -404) {
+  if (process->id == -404) {
     return 0;
- }
+  }
   if (process->id == -1) {
     printf(ANSI_BLUE "==>SCH: " ANSI_RED ANSI_BOLD
                      "Received All Processes\n" ANSI_RESET);
@@ -545,7 +567,7 @@ process_t *createProcess(process_t *process) {
 
   newProcess->RT = shmAdd;
 
-  *newProcess->RT =  process->BT;
+  *newProcess->RT = process->BT;
 
   return newProcess;
 }
@@ -555,6 +577,11 @@ void contextSwitch(process_t *newProcess) {
     currentProcess = newProcess;
 
     if (newProcess->state == READY) {
+      if (!isThereEnoughSpaceFor(memory, newProcess->memsize)) {
+        printf(ANSI_RED "==>SCH: No enough memory for process %d\n" ANSI_RESET,
+               newProcess->id);
+        return;
+      }
       startProcess(newProcess);
     } else if (newProcess->state == STOPPED) {
       resumeProcess(newProcess);
@@ -620,7 +647,6 @@ void resumeProcess(process_t *process) {
     printf(ANSI_BLUE "==>SCH: Resuming process with id = %i\n" ANSI_RESET,
            process->pid);
 
-
     process->state = RUNNING;
     process->WT += getClk() - process->LST;
     (*process->RT)++;
@@ -628,10 +654,9 @@ void resumeProcess(process_t *process) {
 
     // log this
     logger("resumed", process);
-      
-        // if (process->state == STOPPED) {
-    kill(process->pid, SIGCONT);
 
+    // if (process->state == STOPPED) {
+    kill(process->pid, SIGCONT);
   }
 }
 
@@ -736,8 +761,7 @@ void writePerfFile() {
   // calculate STD Deviation of Weighted Turn around time
   double sumSquaresErr = 0;
   for (int i = 0; i < stats.numFinished; i++) {
-    sumSquaresErr +=
-        pow((stats.WTAs[i] - stats.avgWTA), 2);
+    sumSquaresErr += pow((stats.WTAs[i] - stats.avgWTA), 2);
   }
 
   stats.stdWTA = sumSquaresErr / stats.numFinished;
@@ -750,4 +774,3 @@ void writePerfFile() {
 
   fclose(perfFile);
 }
-
