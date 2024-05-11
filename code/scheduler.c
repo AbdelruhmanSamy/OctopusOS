@@ -436,7 +436,7 @@ int RRScheduling(void **readyQueue, process_t *process, int *rQuantem) {
   if (!currentProcess) {
     *rQuantem = -1;
     contextSwitch((process_t *)pop(*readyQ));
-  } else if (*rQuantem <= 0) {
+  } else if (*rQuantem <= 0 && !empty(*readyQ)) {
     preemptProcess(currentProcess);
     push(*readyQ, currentProcess);
     currentProcess = NULL;
